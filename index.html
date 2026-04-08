@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gardelis Medical</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
+.screen{display:none}.screen.active{display:block}
+.container{max-width:520px;margin:0 auto;padding:1rem}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem;margin-bottom:10px}
+.btn{cursor:pointer;border:1px solid #d0d0d0;border-radius:8px;padding:9px 18px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit;transition:background .15s}
+.btn:hover{background:#f0f0f0}
+.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}.btn-primary:hover{background:#0C447C}
+.btn-danger{background:#fff0f0;color:#a32d2d;border-color:#f0c0c0}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-block{width:100%}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#185FA5}
+label{font-size:13px;color:#666;display:block;margin-bottom:4px}
+.field{margin-bottom:12px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0 16px;border-bottom:1px solid #eee;margin-bottom:16px}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0}
+.tag{font-size:11px;padding:3px 9px;border-radius:6px;display:inline-block;margin-right:4px;font-weight:500}
+.role-badge{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500}
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:#eee;border-radius:10px;padding:4px}
+.tab{flex:1;padding:7px;text-align:center;font-size:13px;border-radius:8px;cursor:pointer;color:#666;border:none;background:transparent;font-family:inherit}
+.tab.active{background:#fff;color:#1a1a1a;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#185FA5;border-radius:50%;animation:spin .7s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:10px}
+.alert-warning{background:#fff8e6;color:#854F0B;border:1px solid #f0d090}
+.alert-danger{background:#fff0f0;color:#a32d2d;border:1px solid #f0c0c0}
+.alert-success{background:#eaf3de;color:#3b6d11;border:1px solid #c0dd97}
+.alert-info{background:#e6f1fb;color:#185FA5;border:1px solid #b5d4f4}
+.pdf-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8f8f8;border-radius:8px;margin-top:6px;font-size:13px}
+.pdf-icon{width:28px;height:28px;background:#e6f1fb;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#185FA5;flex-shrink:0}
+.upload-area{border:2px dashed #d0d0d0;border-radius:8px;padding:1rem;text-align:center;cursor:pointer;color:#888;font-size:13px;transition:border-color .2s}
+.upload-area:hover{border-color:#185FA5;color:#185FA5}
+h1{font-size:22px;font-weight:600}
+h2{font-size:18px;font-weight:500}
+h3{font-size:15px;font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingScreen" class="screen active">
+  <div class="container" style="padding-top:3rem;text-align:center">
+    <div style="font-size:18px;font-weight:500;margin-bottom:1rem;color:#185FA5">Gardelis Medical</div>
+    <div class="spinner"></div>
+    <div style="font-size:13px;color:#888;margin-top:1rem">Σύνδεση...</div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen">
+  <div class="container" style="padding-top:2rem">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:24px;font-weight:600;color:#185FA5;margin-bottom:4px">Gardelis Medical</div>
+      <div style="font-size:14px;color:#888">Ιατρικό Αρχείο Οικογένειας</div>
+    </div>
+    <div id="userListEl"></div>
+    <div id="pinArea" style="display:none">
+      <div class="card">
+        <div style="font-size:14px;font-weight:500;margin-bottom:12px" id="pinLabel">Κωδικός πρόσβασης</div>
+        <div class="field"><input type="password" id="pinInput" placeholder="Εισάγετε κωδικό..." onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div id="pinError" class="alert alert-danger" style="display:none">Λάθος κωδικός</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" style="flex:1" onclick="cancelLogin()">Ακύρωση</button>
+          <button class="btn btn-primary" style="flex:1" onclick="doLogin()">Είσοδος</button>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:10px;text-align:center">Αρχικός κωδικός: 1234</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="mainScreen" class="screen">
+  <div class="container">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar" id="mainAvatar" style="width:34px;height:34px;font-size:12px"></div>
+        <div>
+          <div id="mainName" style="font-weight:500;font-size:14px"></div>
+          <div id="mainRoleLabel" style="font-size:11px;color:#888"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-sm" onclick="showChangePin()">Κωδικός</button>
+        <button class="btn btn-sm" id="adminBtn" onclick="showAdmin()" style="display:none">Admin</button>
+        <button class="btn btn-sm" onclick="logout()">Έξοδος</button>
+      </div>
+    </div>
+
+    <div id="readonlyBanner" class="alert alert-warning" style="display:none">
+      Λειτουργία μόνο ανάγνωσης — δεν μπορείτε να προσθέσετε ή να επεξεργαστείτε.
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2>Εξετάσεις</h2>
+      <button class="btn btn-primary btn-sm" id="addBtn" onclick="showAdd()" style="display:none">+ Νέα</button>
+    </div>
+
+    <div class="tabs" id="memberTabs"></div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="filterCat" style="flex:1;min-width:110px;font-size:13px;padding:6px 10px" onchange="renderExams()">
+        <option value="">Όλες κατηγορίες</option>
+        <option>Αιματολογικές</option><option>Απεικονιστικές</option>
+        <option>Καρδιολογικές</option><option>Άλλο</option>
+      </select>
+      <select id="filterRes" style="flex:1;min-width:100px;font-size:13px;padding:6px 10px" onchange="renderExams()">
+        <option value="">Όλα αποτελέσματα</option>
+        <option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option>
+      </select>
+    </div>
+
+    <div id="examList"></div>
+    <div id="examLoading" style="display:none"><div class="spinner"></div></div>
+    <div id="emptyMsg" style="text-align:center;padding:2rem;color:#888;font-size:14px;display:none">Δεν υπάρχουν εξετάσεις ακόμα.</div>
+  </div>
+</div>
+
+<!-- ADD/EDIT EXAM -->
+<div id="addScreen" class="screen">
+  <div class="container">
+    <div class="topbar">
+      <h2 id="addTitle">Νέα Εξέταση</h2>
+      <button class="btn btn-sm" onclick="showMain()">✕</button>
+    </div>
+    <div class="card">
+      <div class="field"><label>Για ποιον;</label>
+        <select id="examOwner"></select>
+      </div>
+      <div class="field"><label>Τύπος εξέτασης *</label>
+        <input type="text" id="examName" placeholder="π.χ. Αιματολογικές, Ακτινογραφία...">
+      </div>
+      <div class="field"><label>Κατηγορία</label>
+        <select id="examCat"><option>Αιματολογικές</option><option>Απεικονιστικές</option><option>Καρδιολογικές</option><option>Άλλο</option></select>
+      </div>
+      <div class="field"><label>Ημερομηνία</label>
+        <input type="date" id="examDate">
+      </div>
+      <div class="field"><label>Αποτέλεσμα</label>
+        <select id="examResult"><option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option></select>
+      </div>
+      <div class="field"><label>Σημειώσεις / Τιμές</label>
+        <textarea id="examNotes" rows="3" placeholder="π.χ. Γλυκόζη: 98 mg/dL..."></textarea>
+      </div>
+      <div class="field"><label>Γιατρός / Κλινική</label>
+        <input type="text" id="examDoctor" placeholder="π.χ. Δρ. Παπαδάκης">
+      </div>
+
+      <div class="field">
+        <label>Αρχεία PDF</label>
+        <div class="upload-area" onclick="document.getElementById('pdfInput').click()">
+          Πατήστε για να επιλέξετε PDF
+        </div>
+        <input type="file" id="pdfInput" accept="application/pdf" multiple style="display:none" onchange="handleFileSelect(event)">
+        <div id="selectedFiles"></div>
+        <div id="existingFiles"></div>
+      </div>
+
+      <div id="saveError" class="alert alert-danger" style="display:none">Συμπληρώστε τον τύπο εξέτασης.</div>
+      <div id="saveLoading" class="alert alert-info" style="display:none">Αποθήκευση...</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="flex:1" onclick="showMain()">Ακύρωση</button>
+        <button class="btn btn-primary" style="flex:1" id="saveBtn" onclick="saveExam()">Αποθήκευση</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PIN -->
+<div id="pinScreen" class="screen">
+  <div class="container">
+    <div class="topbar">
+      <h2>Αλλαγή κωδικού</h2>
+      <button class="btn btn-sm" onclick="showMain()">✕</button>
+    </div>
+    <div class="card">
+      <div class="field"><label>Τρέχων κωδικός</label><input type="password" id="oldPin"></div>
+      <div class="field"><label>Νέος κωδικός</label><input type="password" id="newPin"></div>
+      <div class="field"><label>Επιβεβαίωση νέου</label><input type="password" id="newPin2"></div>
+      <div id="pinChgErr" class="alert alert-danger" style="display:none"></div>
+      <div id="pinChgOk" class="alert alert-success" style="display:none">Ο κωδικός άλλαξε!</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="flex:1" onclick="showMain()">Ακύρωση</button>
+        <button class="btn btn-primary" style="flex:1" onclick="doChangePin()">Αλλαγή</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen" class="screen">
+  <div class="container">
+    <div class="topbar">
+      <h2>Πίνακας Admin</h2>
+      <button class="btn btn-sm" onclick="showMain()">✕</button>
+    </div>
+    <div id="adminUserList"></div>
+    <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
+      <h3 style="margin-bottom:12px">Προσθήκη / Επεξεργασία χρήστη</h3>
+      <div class="card">
+        <input type="hidden" id="editUserId">
+        <div class="field"><label>Όνομα *</label><input type="text" id="editUserName" placeholder="Πλήρες όνομα"></div>
+        <div class="field"><label>Αρχικά (2 γράμματα)</label><input type="text" id="editUserInitials" maxlength="2" placeholder="π.χ. ΑΓ"></div>
+        <div class="field"><label>Ρόλος / Σχέση</label><input type="text" id="editUserRole" placeholder="π.χ. Πατέρας, Μητέρα..."></div>
+        <div class="field"><label>Δικαιώματα</label>
+          <select id="editUserPerm">
+            <option value="rw">Read & Write (Admin)</option>
+            <option value="r">Read only</option>
+          </select>
+        </div>
+        <div id="adminErr" class="alert alert-danger" style="display:none"></div>
+        <div id="adminOk" class="alert alert-success" style="display:none">Αποθηκεύτηκε!</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" style="flex:1" onclick="clearUserForm()">Καθαρισμός</button>
+          <button class="btn btn-primary" style="flex:1" onclick="saveUser()">Αποθήκευση</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://hhaqhdzuevyualtgkpkp.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYXFoZHp1ZXZ5dWFsdGdrcGtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDkzMTQsImV4cCI6MjA5MTIyNTMxNH0.n5HlgLXfHaU59TS1OGUNS7c-glqyVjV7zqMR9UhnfE4';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const COLORS=[
+  {bg:'#E6F1FB',color:'#185FA5'},{bg:'#E1F5EE',color:'#0F6E56'},
+  {bg:'#FAEEDA',color:'#854F0B'},{bg:'#EEEDFE',color:'#3C3489'},
+  {bg:'#FAECE7',color:'#993C1D'},{bg:'#FBEAF0',color:'#993556'}
+];
+const rsStyle={'Κανονικό':{bg:'#EAF3DE',color:'#3B6D11'},'Παθολογικό':{bg:'#FCEBEB',color:'#A32D2D'},'Εκκρεμεί':{bg:'#FAEEDA',color:'#854F0B'}};
+const catStyle={'Αιματολογικές':{bg:'#E6F1FB',color:'#185FA5'},'Απεικονιστικές':{bg:'#EEEDFE',color:'#3C3489'},'Καρδιολογικές':{bg:'#FAECE7',color:'#993C1D'},'Άλλο':{bg:'#f0f0f0',color:'#555'}};
+
+let currentUser=null,selectedUserIdx=null,allUsers=[],activeTab='all',editingExamId=null,pendingFiles=[];
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+async function init(){
+  show('loadingScreen');
+  const {data,error}=await sb.from('users').select('*').order('created_at');
+  if(error){alert('Σφάλμα σύνδεσης: '+error.message);return}
+  allUsers=data||[];
+  buildLoginList();
+  show('loginScreen');
+}
+
+function buildLoginList(){
+  document.getElementById('userListEl').innerHTML=allUsers.map((u,i)=>`
+    <div class="card" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px" onclick="selectUser(${i})">
+      <div class="avatar" style="width:40px;height:40px;font-size:13px;background:${u.bg};color:${u.color}">${u.initials}</div>
+      <div style="flex:1">
+        <div style="font-weight:500;font-size:15px">${u.name}</div>
+        <div style="font-size:12px;color:#888">${u.role}</div>
+      </div>
+      <span class="role-badge" style="background:${u.perm==='rw'?'#e6f1fb':'#f0f0f0'};color:${u.perm==='rw'?'#185FA5':'#666'}">${u.perm==='rw'?'Admin':'Read'}</span>
+    </div>`).join('');
+}
+
+function selectUser(idx){
+  selectedUserIdx=idx;
+  document.getElementById('pinLabel').textContent='Κωδικός για '+allUsers[idx].name;
+  document.getElementById('pinInput').value='';
+  document.getElementById('pinError').style.display='none';
+  document.getElementById('pinArea').style.display='block';
+  setTimeout(()=>document.getElementById('pinInput').focus(),100);
+}
+
+function cancelLogin(){document.getElementById('pinArea').style.display='none';selectedUserIdx=null}
+
+async function doLogin(){
+  if(selectedUserIdx===null)return;
+  const u=allUsers[selectedUserIdx];
+  const pin=document.getElementById('pinInput').value;
+  if(pin===u.pin){
+    currentUser=u;
+    setupMain();
+    show('mainScreen');
+  } else {
+    document.getElementById('pinError').style.display='block';
+  }
+}
+
+function setupMain(){
+  const u=currentUser;
+  const av=document.getElementById('mainAvatar');
+  av.textContent=u.initials;av.style.background=u.bg;av.style.color=u.color;
+  document.getElementById('mainName').textContent=u.name;
+  document.getElementById('mainRoleLabel').textContent=u.perm==='rw'?'Admin — Read & Write':'Read only';
+  document.getElementById('addBtn').style.display=u.perm==='rw'?'':'none';
+  document.getElementById('adminBtn').style.display=u.perm==='rw'?'':'none';
+  document.getElementById('readonlyBanner').style.display=u.perm==='r'?'block':'none';
+  buildTabs();
+  activeTab='all';
+  renderExams();
+  populateOwnerSelect();
+}
+
+function buildTabs(){
+  const tabs=document.getElementById('memberTabs');
+  tabs.innerHTML=`<button class="tab active" id="tabAll" onclick="switchTab('all')">Όλα</button>`
+    +allUsers.map(u=>`<button class="tab" id="tab_${u.id}" onclick="switchTab('${u.id}')">${u.initials}</button>`).join('');
+}
+
+function switchTab(t){
+  activeTab=t;
+  document.getElementById('tabAll').classList.toggle('active',t==='all');
+  allUsers.forEach(u=>document.getElementById('tab_'+u.id)&&document.getElementById('tab_'+u.id).classList.toggle('active',t===u.id));
+  renderExams();
+}
+
+async function renderExams(){
+  document.getElementById('examList').innerHTML='';
+  document.getElementById('emptyMsg').style.display='none';
+  document.getElementById('examLoading').style.display='block';
+  let q=sb.from('exams').select('*').order('exam_date',{ascending:false});
+  if(activeTab!=='all')q=q.eq('owner_id',activeTab);
+  const cat=document.getElementById('filterCat').value;
+  const res=document.getElementById('filterRes').value;
+  if(cat)q=q.eq('category',cat);
+  if(res)q=q.eq('result',res);
+  const {data,error}=await q;
+  document.getElementById('examLoading').style.display='none';
+  if(error||!data||!data.length){document.getElementById('emptyMsg').style.display='block';return}
+  const canWrite=currentUser&&currentUser.perm==='rw';
+  document.getElementById('examList').innerHTML=data.map(e=>{
+    const owner=allUsers.find(u=>u.id===e.owner_id);
+    const rs=rsStyle[e.result]||rsStyle['Εκκρεμεί'];
+    const cs=catStyle[e.category]||catStyle['Άλλο'];
+    const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR'):'';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          ${owner?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <div class="avatar" style="width:22px;height:22px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div>
+            <span style="font-size:12px;color:#888">${owner.name}</span>
+          </div>`:''}
+          <div style="font-weight:500;font-size:15px;margin-bottom:6px">${e.name}</div>
+          <div style="margin-bottom:6px">
+            <span class="tag" style="background:${cs.bg};color:${cs.color}">${e.category||''}</span>
+            <span class="tag" style="background:${rs.bg};color:${rs.color}">${e.result||''}</span>
+          </div>
+          ${dateStr?`<div style="font-size:12px;color:#888;margin-bottom:3px">${dateStr}</div>`:''}
+          ${e.doctor?`<div style="font-size:12px;color:#888;margin-bottom:3px">${e.doctor}</div>`:''}
+          ${e.notes?`<div style="font-size:13px;padding:8px;background:#f8f8f8;border-radius:8px;margin-top:6px">${e.notes}</div>`:''}
+          <div id="files_${e.id}"><span style="font-size:12px;color:#aaa">Φόρτωση αρχείων...</span></div>
+        </div>
+        ${canWrite?`<div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button>
+          <button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή εξέτασης;'))delExam('${e.id}')">Διαγ.</button>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  data.forEach(e=>loadFiles(e.id));
+}
+
+async function loadFiles(examId){
+  const {data}=await sb.from('files').select('*').eq('exam_id',examId);
+  const el=document.getElementById('files_'+examId);
+  if(!el)return;
+  if(!data||!data.length){el.innerHTML='';return}
+  el.innerHTML=data.map(f=>`
+    <div class="pdf-item">
+      <div class="pdf-icon">PDF</div>
+      <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
+      ${currentUser&&currentUser.perm==='rw'?`<button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${examId}')">✕</button>`:''}
+    </div>`).join('');
+}
+
+async function delFile(fileId,path,examId){
+  if(!confirm('Διαγραφή αρχείου;'))return;
+  await sb.storage.from('medical-files').remove([path]);
+  await sb.from('files').delete().eq('id',fileId);
+  loadFiles(examId);
+}
+
+function showAdd(){
+  editingExamId=null;pendingFiles=[];
+  document.getElementById('addTitle').textContent='Νέα Εξέταση';
+  document.getElementById('examName').value='';
+  document.getElementById('examCat').value='Αιματολογικές';
+  document.getElementById('examDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('examResult').value='Κανονικό';
+  document.getElementById('examNotes').value='';
+  document.getElementById('examDoctor').value='';
+  document.getElementById('examOwner').value=currentUser.id;
+  document.getElementById('selectedFiles').innerHTML='';
+  document.getElementById('existingFiles').innerHTML='';
+  document.getElementById('saveError').style.display='none';
+  document.getElementById('saveLoading').style.display='none';
+  show('addScreen');
+}
+
+async function editExam(id){
+  const {data}=await sb.from('exams').select('*').eq('id',id).single();
+  if(!data)return;
+  editingExamId=id;pendingFiles=[];
+  document.getElementById('addTitle').textContent='Επεξεργασία Εξέτασης';
+  document.getElementById('examOwner').value=data.owner_id;
+  document.getElementById('examName').value=data.name;
+  document.getElementById('examCat').value=data.category;
+  document.getElementById('examDate').value=data.exam_date||'';
+  document.getElementById('examResult').value=data.result;
+  document.getElementById('examNotes').value=data.notes||'';
+  document.getElementById('examDoctor').value=data.doctor||'';
+  document.getElementById('selectedFiles').innerHTML='';
+  document.getElementById('saveError').style.display='none';
+  document.getElementById('saveLoading').style.display='none';
+  const {data:files}=await sb.from('files').select('*').eq('exam_id',id);
+  const ef=document.getElementById('existingFiles');
+  ef.innerHTML=(files&&files.length)?'<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Υπάρχοντα αρχεία:</div>'+files.map(f=>`
+    <div class="pdf-item">
+      <div class="pdf-icon">PDF</div>
+      <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
+      <button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${id}');this.parentElement.remove()">✕</button>
+    </div>`).join(''):'';
+  show('addScreen');
+}
+
+function handleFileSelect(e){
+  const files=Array.from(e.target.files);
+  pendingFiles=[...pendingFiles,...files];
+  document.getElementById('selectedFiles').innerHTML=
+    '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Νέα αρχεία:</div>'+
+    pendingFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-icon">PDF</div><span style="flex:1;font-size:13px">${f.name}</span><button class="btn btn-sm btn-danger" onclick="removePending(${i})">✕</button></div>`).join('');
+}
+
+function removePending(i){pendingFiles.splice(i,1);document.getElementById('pdfInput').value='';
+  document.getElementById('selectedFiles').innerHTML=pendingFiles.length?
+    '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Νέα αρχεία:</div>'+
+    pendingFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-icon">PDF</div><span style="flex:1;font-size:13px">${f.name}</span><button class="btn btn-sm btn-danger" onclick="removePending(${i})">✕</button></div>`).join(''):'';
+}
+
+function populateOwnerSelect(){
+  document.getElementById('examOwner').innerHTML=allUsers.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+}
+
+async function saveExam(){
+  const name=document.getElementById('examName').value.trim();
+  if(!name){document.getElementById('saveError').style.display='block';return}
+  document.getElementById('saveError').style.display='none';
+  document.getElementById('saveLoading').style.display='block';
+  document.getElementById('saveBtn').disabled=true;
+  const payload={owner_id:document.getElementById('examOwner').value,name,category:document.getElementById('examCat').value,exam_date:document.getElementById('examDate').value||null,result:document.getElementById('examResult').value,notes:document.getElementById('examNotes').value.trim(),doctor:document.getElementById('examDoctor').value.trim()};
+  let examId=editingExamId;
+  if(editingExamId){
+    await sb.from('exams').update(payload).eq('id',editingExamId);
+  } else {
+    const {data}=await sb.from('exams').insert(payload).select().single();
+    examId=data.id;
+  }
+  for(const file of pendingFiles){
+    const path=`${examId}/${Date.now()}_${file.name}`;
+    const {error}=await sb.storage.from('medical-files').upload(path,file);
+    if(!error)await sb.from('files').insert({exam_id:examId,file_name:file.name,storage_path:path});
+  }
+  document.getElementById('saveBtn').disabled=false;
+  editingExamId=null;pendingFiles=[];
+  showMain();
+}
+
+async function delExam(id){
+  const {data:files}=await sb.from('files').select('storage_path').eq('exam_id',id);
+  if(files&&files.length)await sb.storage.from('medical-files').remove(files.map(f=>f.storage_path));
+  await sb.from('files').delete().eq('exam_id',id);
+  await sb.from('exams').delete().eq('id',id);
+  renderExams();
+}
+
+function showMain(){editingExamId=null;pendingFiles=[];show('mainScreen');renderExams()}
+function logout(){currentUser=null;selectedUserIdx=null;document.getElementById('pinArea').style.display='none';buildLoginList();show('loginScreen')}
+
+function showChangePin(){
+  ['oldPin','newPin','newPin2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pinChgErr').style.display='none';
+  document.getElementById('pinChgOk').style.display='none';
+  show('pinScreen');
+}
+
+async function doChangePin(){
+  const old=document.getElementById('oldPin').value,n1=document.getElementById('newPin').value,n2=document.getElementById('newPin2').value;
+  const err=document.getElementById('pinChgErr'),ok=document.getElementById('pinChgOk');
+  err.style.display='none';ok.style.display='none';
+  if(old!==currentUser.pin){err.textContent='Λάθος τρέχων κωδικός';err.style.display='block';return}
+  if(n1.length<4){err.textContent='Τουλάχιστον 4 χαρακτήρες';err.style.display='block';return}
+  if(n1!==n2){err.textContent='Οι κωδικοί δεν ταιριάζουν';err.style.display='block';return}
+  await sb.from('users').update({pin:n1}).eq('id',currentUser.id);
+  currentUser.pin=n1;
+  allUsers=allUsers.map(u=>u.id===currentUser.id?{...u,pin:n1}:u);
+  ok.style.display='block';setTimeout(showMain,1200);
+}
+
+async function showAdmin(){
+  await refreshUsers();renderAdminUsers();clearUserForm();show('adminScreen');
+}
+
+async function refreshUsers(){
+  const {data}=await sb.from('users').select('*').order('created_at');
+  allUsers=data||[];
+}
+
+function renderAdminUsers(){
+  document.getElementById('adminUserList').innerHTML=allUsers.map((u,i)=>`
+    <div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 14px">
+      <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${u.bg};color:${u.color}">${u.initials}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${u.name}</div>
+        <div style="font-size:12px;color:#888">${u.role}</div>
+      </div>
+      <span class="role-badge" style="background:${u.perm==='rw'?'#e6f1fb':'#f0f0f0'};color:${u.perm==='rw'?'#185FA5':'#666'}">${u.perm==='rw'?'Admin':'Read'}</span>
+      <button class="btn btn-sm" onclick="loadUserEdit('${u.id}')">Επεξ.</button>
+      ${u.id!==currentUser.id?`<button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή χρήστη;'))deleteUser('${u.id}')">Διαγ.</button>`:''}
+    </div>`).join('');
+}
+
+function loadUserEdit(id){
+  const u=allUsers.find(x=>x.id===id);if(!u)return;
+  document.getElementById('editUserId').value=u.id;
+  document.getElementById('editUserName').value=u.name;
+  document.getElementById('editUserInitials').value=u.initials;
+  document.getElementById('editUserRole').value=u.role;
+  document.getElementById('editUserPerm').value=u.perm;
+}
+
+function clearUserForm(){
+  ['editUserId','editUserName','editUserInitials','editUserRole'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('editUserPerm').value='r';
+  document.getElementById('adminErr').style.display='none';
+  document.getElementById('adminOk').style.display='none';
+}
+
+async function saveUser(){
+  const name=document.getElementById('editUserName').value.trim();
+  const initials=document.getElementById('editUserInitials').value.trim().slice(0,2);
+  const role=document.getElementById('editUserRole').value.trim();
+  const perm=document.getElementById('editUserPerm').value;
+  const err=document.getElementById('adminErr'),ok=document.getElementById('adminOk');
+  err.style.display='none';ok.style.display='none';
+  if(!name||!initials){err.textContent='Συμπληρώστε όνομα και αρχικά.';err.style.display='block';return}
+  const uid=document.getElementById('editUserId').value;
+  if(uid){
+    await sb.from('users').update({name,initials,role,perm}).eq('id',uid);
+    if(uid===currentUser.id){currentUser={...currentUser,name,initials,role,perm};}
+  } else {
+    const ci=allUsers.length%COLORS.length;
+    await sb.from('users').insert({name,initials,role,perm,pin:'1234',bg:COLORS[ci].bg,color:COLORS[ci].color});
+  }
+  await refreshUsers();renderAdminUsers();clearUserForm();
+  ok.style.display='block';setTimeout(()=>ok.style.display='none',2000);
+}
+
+async function deleteUser(id){
+  await sb.from('users').delete().eq('id',id);
+  await refreshUsers();renderAdminUsers();
+}
+
+init();
+</script>
+</body>
+</html>
