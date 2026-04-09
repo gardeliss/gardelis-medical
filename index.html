@@ -16,7 +16,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}.btn-primary:hover{background:#0C447C}
 .btn-danger{background:#fff0f0;color:#a32d2d;border-color:#f0c0c0}
 .btn-sm{padding:5px 11px;font-size:12px}
-.btn-block{width:100%}
 input,select,textarea{width:100%;padding:9px 12px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit}
 input:focus,select:focus,textarea:focus{outline:none;border-color:#185FA5}
 label{font-size:13px;color:#666;display:block;margin-bottom:4px}
@@ -25,8 +24,8 @@ label{font-size:13px;color:#666;display:block;margin-bottom:4px}
 .avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0}
 .tag{font-size:11px;padding:3px 9px;border-radius:6px;display:inline-block;margin-right:4px;font-weight:500}
 .role-badge{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500}
-.tabs{display:flex;gap:4px;margin-bottom:14px;background:#eee;border-radius:10px;padding:4px}
-.tab{flex:1;padding:7px;text-align:center;font-size:13px;border-radius:8px;cursor:pointer;color:#666;border:none;background:transparent;font-family:inherit}
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:#eee;border-radius:10px;padding:4px;flex-wrap:wrap}
+.tab{flex:1;min-width:48px;padding:7px;text-align:center;font-size:13px;border-radius:8px;cursor:pointer;color:#666;border:none;background:transparent;font-family:inherit}
 .tab.active{background:#fff;color:#1a1a1a;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#185FA5;border-radius:50%;animation:spin .7s linear infinite;margin:2rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -39,9 +38,14 @@ label{font-size:13px;color:#666;display:block;margin-bottom:4px}
 .pdf-icon{width:28px;height:28px;background:#e6f1fb;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#185FA5;flex-shrink:0}
 .upload-area{border:2px dashed #d0d0d0;border-radius:8px;padding:1rem;text-align:center;cursor:pointer;color:#888;font-size:13px;transition:border-color .2s}
 .upload-area:hover{border-color:#185FA5;color:#185FA5}
-h1{font-size:22px;font-weight:600}
+.login-box{max-width:360px;margin:0 auto}
+.vis-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.vis-row:last-child{border-bottom:none}
 h2{font-size:18px;font-weight:500}
 h3{font-size:15px;font-weight:500}
+.date-filters{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.date-filters input{flex:1;min-width:120px;font-size:13px;padding:6px 10px}
+.date-filters label{font-size:12px;color:#888;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -49,7 +53,7 @@ h3{font-size:15px;font-weight:500}
 <!-- LOADING -->
 <div id="loadingScreen" class="screen active">
   <div class="container" style="padding-top:3rem;text-align:center">
-    <div style="font-size:18px;font-weight:500;margin-bottom:1rem;color:#185FA5">Gardelis Medical</div>
+    <div style="font-size:20px;font-weight:600;margin-bottom:1rem;color:#185FA5">Gardelis Medical</div>
     <div class="spinner"></div>
     <div style="font-size:13px;color:#888;margin-top:1rem">Σύνδεση...</div>
   </div>
@@ -57,22 +61,23 @@ h3{font-size:15px;font-weight:500}
 
 <!-- LOGIN -->
 <div id="loginScreen" class="screen">
-  <div class="container" style="padding-top:2rem">
-    <div style="text-align:center;margin-bottom:2rem">
-      <div style="font-size:24px;font-weight:600;color:#185FA5;margin-bottom:4px">Gardelis Medical</div>
-      <div style="font-size:14px;color:#888">Ιατρικό Αρχείο Οικογένειας</div>
-    </div>
-    <div id="userListEl"></div>
-    <div id="pinArea" style="display:none">
+  <div class="container" style="padding-top:3rem">
+    <div class="login-box">
+      <div style="text-align:center;margin-bottom:2rem">
+        <div style="font-size:26px;font-weight:700;color:#185FA5;margin-bottom:4px">Gardelis Medical</div>
+        <div style="font-size:14px;color:#888">Ιατρικό Αρχείο Οικογένειας</div>
+      </div>
       <div class="card">
-        <div style="font-size:14px;font-weight:500;margin-bottom:12px" id="pinLabel">Κωδικός πρόσβασης</div>
-        <div class="field"><input type="password" id="pinInput" placeholder="Εισάγετε κωδικό..." onkeydown="if(event.key==='Enter')doLogin()"></div>
-        <div id="pinError" class="alert alert-danger" style="display:none">Λάθος κωδικός</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" style="flex:1" onclick="cancelLogin()">Ακύρωση</button>
-          <button class="btn btn-primary" style="flex:1" onclick="doLogin()">Είσοδος</button>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="loginUsername" placeholder="Εισάγετε username..." autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
         </div>
-        <div style="font-size:11px;color:#aaa;margin-top:10px;text-align:center">Αρχικός κωδικός: 1234</div>
+        <div class="field">
+          <label>Κωδικός</label>
+          <input type="password" id="loginPassword" placeholder="Εισάγετε κωδικό..." autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div id="loginError" class="alert alert-danger" style="display:none">Λάθος username ή κωδικός.</div>
+        <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Είσοδος</button>
       </div>
     </div>
   </div>
@@ -107,7 +112,8 @@ h3{font-size:15px;font-weight:500}
 
     <div class="tabs" id="memberTabs"></div>
 
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <!-- Φίλτρα -->
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
       <select id="filterCat" style="flex:1;min-width:110px;font-size:13px;padding:6px 10px" onchange="renderExams()">
         <option value="">Όλες κατηγορίες</option>
         <option>Αιματολογικές</option><option>Απεικονιστικές</option>
@@ -118,10 +124,23 @@ h3{font-size:15px;font-weight:500}
         <option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option>
       </select>
     </div>
+    <div class="date-filters">
+      <div style="flex:1;min-width:120px">
+        <label>Από ημερομηνία</label>
+        <input type="date" id="filterDateFrom" onchange="renderExams()">
+      </div>
+      <div style="flex:1;min-width:120px">
+        <label>Έως ημερομηνία</label>
+        <input type="date" id="filterDateTo" onchange="renderExams()">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-sm" onclick="clearDateFilters()" style="white-space:nowrap;margin-bottom:0">✕ Καθαρισμός</button>
+      </div>
+    </div>
 
     <div id="examList"></div>
     <div id="examLoading" style="display:none"><div class="spinner"></div></div>
-    <div id="emptyMsg" style="text-align:center;padding:2rem;color:#888;font-size:14px;display:none">Δεν υπάρχουν εξετάσεις ακόμα.</div>
+    <div id="emptyMsg" style="text-align:center;padding:2rem;color:#888;font-size:14px;display:none">Δεν υπάρχουν εξετάσεις.</div>
   </div>
 </div>
 
@@ -133,18 +152,14 @@ h3{font-size:15px;font-weight:500}
       <button class="btn btn-sm" onclick="showMain()">✕</button>
     </div>
     <div class="card">
-      <div class="field"><label>Για ποιον;</label>
-        <select id="examOwner"></select>
-      </div>
+      <div class="field"><label>Για ποιον;</label><select id="examOwner"></select></div>
       <div class="field"><label>Τύπος εξέτασης *</label>
         <input type="text" id="examName" placeholder="π.χ. Αιματολογικές, Ακτινογραφία...">
       </div>
       <div class="field"><label>Κατηγορία</label>
         <select id="examCat"><option>Αιματολογικές</option><option>Απεικονιστικές</option><option>Καρδιολογικές</option><option>Άλλο</option></select>
       </div>
-      <div class="field"><label>Ημερομηνία</label>
-        <input type="date" id="examDate">
-      </div>
+      <div class="field"><label>Ημερομηνία</label><input type="date" id="examDate"></div>
       <div class="field"><label>Αποτέλεσμα</label>
         <select id="examResult"><option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option></select>
       </div>
@@ -154,17 +169,13 @@ h3{font-size:15px;font-weight:500}
       <div class="field"><label>Γιατρός / Κλινική</label>
         <input type="text" id="examDoctor" placeholder="π.χ. Δρ. Παπαδάκης">
       </div>
-
       <div class="field">
         <label>Αρχεία PDF</label>
-        <div class="upload-area" onclick="document.getElementById('pdfInput').click()">
-          Πατήστε για να επιλέξετε PDF
-        </div>
+        <div class="upload-area" onclick="document.getElementById('pdfInput').click()">Πατήστε για να επιλέξετε PDF</div>
         <input type="file" id="pdfInput" accept="application/pdf" multiple style="display:none" onchange="handleFileSelect(event)">
         <div id="selectedFiles"></div>
         <div id="existingFiles"></div>
       </div>
-
       <div id="saveError" class="alert alert-danger" style="display:none">Συμπληρώστε τον τύπο εξέτασης.</div>
       <div id="saveLoading" class="alert alert-info" style="display:none">Αποθήκευση...</div>
       <div style="display:flex;gap:8px">
@@ -178,10 +189,7 @@ h3{font-size:15px;font-weight:500}
 <!-- CHANGE PIN -->
 <div id="pinScreen" class="screen">
   <div class="container">
-    <div class="topbar">
-      <h2>Αλλαγή κωδικού</h2>
-      <button class="btn btn-sm" onclick="showMain()">✕</button>
-    </div>
+    <div class="topbar"><h2>Αλλαγή κωδικού</h2><button class="btn btn-sm" onclick="showMain()">✕</button></div>
     <div class="card">
       <div class="field"><label>Τρέχων κωδικός</label><input type="password" id="oldPin"></div>
       <div class="field"><label>Νέος κωδικός</label><input type="password" id="newPin"></div>
@@ -199,16 +207,18 @@ h3{font-size:15px;font-weight:500}
 <!-- ADMIN -->
 <div id="adminScreen" class="screen">
   <div class="container">
-    <div class="topbar">
-      <h2>Πίνακας Admin</h2>
-      <button class="btn btn-sm" onclick="showMain()">✕</button>
-    </div>
+    <div class="topbar"><h2>Πίνακας Admin</h2><button class="btn btn-sm" onclick="showMain()">✕</button></div>
+
+    <!-- User list -->
     <div id="adminUserList"></div>
+
+    <!-- Add/Edit user form -->
     <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
-      <h3 style="margin-bottom:12px">Προσθήκη / Επεξεργασία χρήστη</h3>
+      <h3 style="margin-bottom:12px" id="userFormTitle">Προσθήκη χρήστη</h3>
       <div class="card">
         <input type="hidden" id="editUserId">
         <div class="field"><label>Όνομα *</label><input type="text" id="editUserName" placeholder="Πλήρες όνομα"></div>
+        <div class="field"><label>Username * (για login)</label><input type="text" id="editUserUsername" placeholder="π.χ. andreas" autocomplete="off"></div>
         <div class="field"><label>Αρχικά (2 γράμματα)</label><input type="text" id="editUserInitials" maxlength="2" placeholder="π.χ. ΑΓ"></div>
         <div class="field"><label>Ρόλος / Σχέση</label><input type="text" id="editUserRole" placeholder="π.χ. Πατέρας, Μητέρα..."></div>
         <div class="field"><label>Δικαιώματα</label>
@@ -225,6 +235,19 @@ h3{font-size:15px;font-weight:500}
         </div>
       </div>
     </div>
+
+    <!-- Visibility management -->
+    <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px" id="visSection" style="display:none">
+      <h3 style="margin-bottom:4px">Ορατότητα χρηστών</h3>
+      <div style="font-size:12px;color:#888;margin-bottom:12px">Ορίστε ποιος χρήστης βλέπει τις εξετάσεις ποιων άλλων.</div>
+      <div class="field"><label>Επιλογή χρήστη</label>
+        <select id="visViewer" onchange="loadVisibility()"></select>
+      </div>
+      <div class="card" id="visTargetList" style="padding:8px 14px"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveVisibility()">Αποθήκευση ορατότητας</button>
+      <div id="visOk" class="alert alert-success" style="display:none;margin-top:8px">Αποθηκεύτηκε!</div>
+    </div>
+
   </div>
 </div>
 
@@ -241,52 +264,41 @@ const COLORS=[
 const rsStyle={'Κανονικό':{bg:'#EAF3DE',color:'#3B6D11'},'Παθολογικό':{bg:'#FCEBEB',color:'#A32D2D'},'Εκκρεμεί':{bg:'#FAEEDA',color:'#854F0B'}};
 const catStyle={'Αιματολογικές':{bg:'#E6F1FB',color:'#185FA5'},'Απεικονιστικές':{bg:'#EEEDFE',color:'#3C3489'},'Καρδιολογικές':{bg:'#FAECE7',color:'#993C1D'},'Άλλο':{bg:'#f0f0f0',color:'#555'}};
 
-let currentUser=null,selectedUserIdx=null,allUsers=[],activeTab='all',editingExamId=null,pendingFiles=[];
+let currentUser=null, allUsers=[], visibleUserIds=[], activeTab='all', editingExamId=null, pendingFiles=[];
 
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
 
 async function init(){
   show('loadingScreen');
   const {data,error}=await sb.from('users').select('*').order('created_at');
-  if(error){alert('Σφάλμα σύνδεσης: '+error.message);return}
+  if(error){document.getElementById('loadingScreen').innerHTML='<div class="container" style="padding-top:3rem;text-align:center"><div class="alert alert-danger">Σφάλμα σύνδεσης. Ανανεώστε τη σελίδα.</div></div>';return}
   allUsers=data||[];
-  buildLoginList();
   show('loginScreen');
 }
 
-function buildLoginList(){
-  document.getElementById('userListEl').innerHTML=allUsers.map((u,i)=>`
-    <div class="card" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px" onclick="selectUser(${i})">
-      <div class="avatar" style="width:40px;height:40px;font-size:13px;background:${u.bg};color:${u.color}">${u.initials}</div>
-      <div style="flex:1">
-        <div style="font-weight:500;font-size:15px">${u.name}</div>
-        <div style="font-size:12px;color:#888">${u.role}</div>
-      </div>
-      <span class="role-badge" style="background:${u.perm==='rw'?'#e6f1fb':'#f0f0f0'};color:${u.perm==='rw'?'#185FA5':'#666'}">${u.perm==='rw'?'Admin':'Read'}</span>
-    </div>`).join('');
-}
-
-function selectUser(idx){
-  selectedUserIdx=idx;
-  document.getElementById('pinLabel').textContent='Κωδικός για '+allUsers[idx].name;
-  document.getElementById('pinInput').value='';
-  document.getElementById('pinError').style.display='none';
-  document.getElementById('pinArea').style.display='block';
-  setTimeout(()=>document.getElementById('pinInput').focus(),100);
-}
-
-function cancelLogin(){document.getElementById('pinArea').style.display='none';selectedUserIdx=null}
-
 async function doLogin(){
-  if(selectedUserIdx===null)return;
-  const u=allUsers[selectedUserIdx];
-  const pin=document.getElementById('pinInput').value;
-  if(pin===u.pin){
-    currentUser=u;
-    setupMain();
-    show('mainScreen');
+  const username=document.getElementById('loginUsername').value.trim().toLowerCase();
+  const password=document.getElementById('loginPassword').value;
+  document.getElementById('loginError').style.display='none';
+  if(!username||!password){document.getElementById('loginError').style.display='block';return}
+  const user=allUsers.find(u=>u.username&&u.username.toLowerCase()===username);
+  if(!user||user.pin!==password){document.getElementById('loginError').style.display='block';return}
+  currentUser=user;
+  await loadVisibleUsers();
+  setupMain();
+  show('mainScreen');
+}
+
+async function loadVisibleUsers(){
+  if(currentUser.perm==='rw'){
+    visibleUserIds=allUsers.map(u=>u.id);
+    return;
+  }
+  const {data}=await sb.from('user_visibility').select('target_id').eq('viewer_id',currentUser.id);
+  if(data&&data.length){
+    visibleUserIds=[currentUser.id,...data.map(r=>r.target_id)];
   } else {
-    document.getElementById('pinError').style.display='block';
+    visibleUserIds=[currentUser.id];
   }
 }
 
@@ -301,36 +313,52 @@ function setupMain(){
   document.getElementById('readonlyBanner').style.display=u.perm==='r'?'block':'none';
   buildTabs();
   activeTab='all';
+  clearDateFilters(false);
   renderExams();
   populateOwnerSelect();
 }
 
 function buildTabs(){
+  const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
   const tabs=document.getElementById('memberTabs');
   tabs.innerHTML=`<button class="tab active" id="tabAll" onclick="switchTab('all')">Όλα</button>`
-    +allUsers.map(u=>`<button class="tab" id="tab_${u.id}" onclick="switchTab('${u.id}')">${u.initials}</button>`).join('');
+    +visUsers.map(u=>`<button class="tab" id="tab_${u.id}" onclick="switchTab('${u.id}')">${u.initials}</button>`).join('');
 }
 
 function switchTab(t){
   activeTab=t;
   document.getElementById('tabAll').classList.toggle('active',t==='all');
-  allUsers.forEach(u=>document.getElementById('tab_'+u.id)&&document.getElementById('tab_'+u.id).classList.toggle('active',t===u.id));
+  allUsers.forEach(u=>{const el=document.getElementById('tab_'+u.id);if(el)el.classList.toggle('active',t===u.id)});
   renderExams();
+}
+
+function clearDateFilters(rerender=true){
+  document.getElementById('filterDateFrom').value='';
+  document.getElementById('filterDateTo').value='';
+  if(rerender)renderExams();
 }
 
 async function renderExams(){
   document.getElementById('examList').innerHTML='';
   document.getElementById('emptyMsg').style.display='none';
   document.getElementById('examLoading').style.display='block';
-  let q=sb.from('exams').select('*').order('exam_date',{ascending:false});
-  if(activeTab!=='all')q=q.eq('owner_id',activeTab);
+
+  let ownerIds=activeTab==='all'?visibleUserIds:[activeTab];
+  let q=sb.from('exams').select('*').in('owner_id',ownerIds).order('exam_date',{ascending:false});
+
   const cat=document.getElementById('filterCat').value;
   const res=document.getElementById('filterRes').value;
+  const dateFrom=document.getElementById('filterDateFrom').value;
+  const dateTo=document.getElementById('filterDateTo').value;
   if(cat)q=q.eq('category',cat);
   if(res)q=q.eq('result',res);
+  if(dateFrom)q=q.gte('exam_date',dateFrom);
+  if(dateTo)q=q.lte('exam_date',dateTo);
+
   const {data,error}=await q;
   document.getElementById('examLoading').style.display='none';
   if(error||!data||!data.length){document.getElementById('emptyMsg').style.display='block';return}
+
   const canWrite=currentUser&&currentUser.perm==='rw';
   document.getElementById('examList').innerHTML=data.map(e=>{
     const owner=allUsers.find(u=>u.id===e.owner_id);
@@ -352,7 +380,7 @@ async function renderExams(){
           ${dateStr?`<div style="font-size:12px;color:#888;margin-bottom:3px">${dateStr}</div>`:''}
           ${e.doctor?`<div style="font-size:12px;color:#888;margin-bottom:3px">${e.doctor}</div>`:''}
           ${e.notes?`<div style="font-size:13px;padding:8px;background:#f8f8f8;border-radius:8px;margin-top:6px">${e.notes}</div>`:''}
-          <div id="files_${e.id}"><span style="font-size:12px;color:#aaa">Φόρτωση αρχείων...</span></div>
+          <div id="files_${e.id}"><span style="font-size:12px;color:#ccc">φόρτωση...</span></div>
         </div>
         ${canWrite?`<div style="display:flex;gap:5px;flex-shrink:0">
           <button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button>
@@ -369,11 +397,12 @@ async function loadFiles(examId){
   const el=document.getElementById('files_'+examId);
   if(!el)return;
   if(!data||!data.length){el.innerHTML='';return}
+  const canWrite=currentUser&&currentUser.perm==='rw';
   el.innerHTML=data.map(f=>`
     <div class="pdf-item">
       <div class="pdf-icon">PDF</div>
       <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
-      ${currentUser&&currentUser.perm==='rw'?`<button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${examId}')">✕</button>`:''}
+      ${canWrite?`<button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${examId}')">✕</button>`:''}
     </div>`).join('');
 }
 
@@ -387,12 +416,10 @@ async function delFile(fileId,path,examId){
 function showAdd(){
   editingExamId=null;pendingFiles=[];
   document.getElementById('addTitle').textContent='Νέα Εξέταση';
-  document.getElementById('examName').value='';
+  ['examName','examNotes','examDoctor'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('examCat').value='Αιματολογικές';
   document.getElementById('examDate').value=new Date().toISOString().split('T')[0];
   document.getElementById('examResult').value='Κανονικό';
-  document.getElementById('examNotes').value='';
-  document.getElementById('examDoctor').value='';
   document.getElementById('examOwner').value=currentUser.id;
   document.getElementById('selectedFiles').innerHTML='';
   document.getElementById('existingFiles').innerHTML='';
@@ -418,31 +445,29 @@ async function editExam(id){
   document.getElementById('saveLoading').style.display='none';
   const {data:files}=await sb.from('files').select('*').eq('exam_id',id);
   const ef=document.getElementById('existingFiles');
-  ef.innerHTML=(files&&files.length)?'<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Υπάρχοντα αρχεία:</div>'+files.map(f=>`
-    <div class="pdf-item">
-      <div class="pdf-icon">PDF</div>
+  ef.innerHTML=(files&&files.length)?
+    '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Υπάρχοντα αρχεία:</div>'+
+    files.map(f=>`<div class="pdf-item"><div class="pdf-icon">PDF</div>
       <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
-      <button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${id}');this.parentElement.remove()">✕</button>
+      <button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${id}');this.closest('.pdf-item').remove()">✕</button>
     </div>`).join(''):'';
   show('addScreen');
 }
 
 function handleFileSelect(e){
-  const files=Array.from(e.target.files);
-  pendingFiles=[...pendingFiles,...files];
-  document.getElementById('selectedFiles').innerHTML=
-    '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Νέα αρχεία:</div>'+
-    pendingFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-icon">PDF</div><span style="flex:1;font-size:13px">${f.name}</span><button class="btn btn-sm btn-danger" onclick="removePending(${i})">✕</button></div>`).join('');
+  pendingFiles=[...pendingFiles,...Array.from(e.target.files)];
+  renderPendingFiles();
 }
-
-function removePending(i){pendingFiles.splice(i,1);document.getElementById('pdfInput').value='';
+function removePending(i){pendingFiles.splice(i,1);document.getElementById('pdfInput').value='';renderPendingFiles()}
+function renderPendingFiles(){
   document.getElementById('selectedFiles').innerHTML=pendingFiles.length?
     '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Νέα αρχεία:</div>'+
     pendingFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-icon">PDF</div><span style="flex:1;font-size:13px">${f.name}</span><button class="btn btn-sm btn-danger" onclick="removePending(${i})">✕</button></div>`).join(''):'';
 }
 
 function populateOwnerSelect(){
-  document.getElementById('examOwner').innerHTML=allUsers.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
+  document.getElementById('examOwner').innerHTML=visUsers.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
 }
 
 async function saveExam(){
@@ -478,7 +503,14 @@ async function delExam(id){
 }
 
 function showMain(){editingExamId=null;pendingFiles=[];show('mainScreen');renderExams()}
-function logout(){currentUser=null;selectedUserIdx=null;document.getElementById('pinArea').style.display='none';buildLoginList();show('loginScreen')}
+
+function logout(){
+  currentUser=null;visibleUserIds=[];
+  document.getElementById('loginUsername').value='';
+  document.getElementById('loginPassword').value='';
+  document.getElementById('loginError').style.display='none';
+  show('loginScreen');
+}
 
 function showChangePin(){
   ['oldPin','newPin','newPin2'].forEach(id=>document.getElementById(id).value='');
@@ -497,11 +529,16 @@ async function doChangePin(){
   await sb.from('users').update({pin:n1}).eq('id',currentUser.id);
   currentUser.pin=n1;
   allUsers=allUsers.map(u=>u.id===currentUser.id?{...u,pin:n1}:u);
-  ok.style.display='block';setTimeout(showMain,1200);
+  ok.style.display='block';setTimeout(showMain,1400);
 }
 
 async function showAdmin(){
-  await refreshUsers();renderAdminUsers();clearUserForm();show('adminScreen');
+  await refreshUsers();
+  renderAdminUsers();
+  clearUserForm();
+  populateVisViewer();
+  document.getElementById('visSection').style.display='block';
+  show('adminScreen');
 }
 
 async function refreshUsers(){
@@ -510,12 +547,12 @@ async function refreshUsers(){
 }
 
 function renderAdminUsers(){
-  document.getElementById('adminUserList').innerHTML=allUsers.map((u,i)=>`
+  document.getElementById('adminUserList').innerHTML=allUsers.map(u=>`
     <div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 14px">
       <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${u.bg};color:${u.color}">${u.initials}</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:500">${u.name}</div>
-        <div style="font-size:12px;color:#888">${u.role}</div>
+        <div style="font-size:12px;color:#888">${u.role} &nbsp;·&nbsp; <span style="color:#185FA5">@${u.username||'—'}</span></div>
       </div>
       <span class="role-badge" style="background:${u.perm==='rw'?'#e6f1fb':'#f0f0f0'};color:${u.perm==='rw'?'#185FA5':'#666'}">${u.perm==='rw'?'Admin':'Read'}</span>
       <button class="btn btn-sm" onclick="loadUserEdit('${u.id}')">Επεξ.</button>
@@ -527,41 +564,86 @@ function loadUserEdit(id){
   const u=allUsers.find(x=>x.id===id);if(!u)return;
   document.getElementById('editUserId').value=u.id;
   document.getElementById('editUserName').value=u.name;
+  document.getElementById('editUserUsername').value=u.username||'';
   document.getElementById('editUserInitials').value=u.initials;
   document.getElementById('editUserRole').value=u.role;
   document.getElementById('editUserPerm').value=u.perm;
-}
-
-function clearUserForm(){
-  ['editUserId','editUserName','editUserInitials','editUserRole'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('editUserPerm').value='r';
+  document.getElementById('userFormTitle').textContent='Επεξεργασία χρήστη';
   document.getElementById('adminErr').style.display='none';
   document.getElementById('adminOk').style.display='none';
 }
 
+function clearUserForm(){
+  ['editUserId','editUserName','editUserUsername','editUserInitials','editUserRole'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('editUserPerm').value='r';
+  document.getElementById('adminErr').style.display='none';
+  document.getElementById('adminOk').style.display='none';
+  document.getElementById('userFormTitle').textContent='Προσθήκη χρήστη';
+}
+
 async function saveUser(){
   const name=document.getElementById('editUserName').value.trim();
+  const username=document.getElementById('editUserUsername').value.trim().toLowerCase();
   const initials=document.getElementById('editUserInitials').value.trim().slice(0,2);
   const role=document.getElementById('editUserRole').value.trim();
   const perm=document.getElementById('editUserPerm').value;
   const err=document.getElementById('adminErr'),ok=document.getElementById('adminOk');
   err.style.display='none';ok.style.display='none';
-  if(!name||!initials){err.textContent='Συμπληρώστε όνομα και αρχικά.';err.style.display='block';return}
+  if(!name||!username||!initials){err.textContent='Συμπληρώστε όνομα, username και αρχικά.';err.style.display='block';return}
+  const duplicate=allUsers.find(u=>u.username===username&&u.id!==document.getElementById('editUserId').value);
+  if(duplicate){err.textContent='Το username χρησιμοποιείται ήδη.';err.style.display='block';return}
   const uid=document.getElementById('editUserId').value;
   if(uid){
-    await sb.from('users').update({name,initials,role,perm}).eq('id',uid);
-    if(uid===currentUser.id){currentUser={...currentUser,name,initials,role,perm};}
+    await sb.from('users').update({name,username,initials,role,perm}).eq('id',uid);
+    if(uid===currentUser.id)currentUser={...currentUser,name,username,initials,role,perm};
   } else {
     const ci=allUsers.length%COLORS.length;
-    await sb.from('users').insert({name,initials,role,perm,pin:'1234',bg:COLORS[ci].bg,color:COLORS[ci].color});
+    await sb.from('users').insert({name,username,initials,role,perm,pin:'1234',bg:COLORS[ci].bg,color:COLORS[ci].color});
   }
-  await refreshUsers();renderAdminUsers();clearUserForm();
+  await refreshUsers();renderAdminUsers();clearUserForm();populateVisViewer();
   ok.style.display='block';setTimeout(()=>ok.style.display='none',2000);
 }
 
 async function deleteUser(id){
+  await sb.from('user_visibility').delete().or(`viewer_id.eq.${id},target_id.eq.${id}`);
   await sb.from('users').delete().eq('id',id);
-  await refreshUsers();renderAdminUsers();
+  await refreshUsers();renderAdminUsers();populateVisViewer();
+}
+
+// --- Visibility management ---
+function populateVisViewer(){
+  const sel=document.getElementById('visViewer');
+  sel.innerHTML=allUsers.map(u=>`<option value="${u.id}">${u.name} (@${u.username||'—'})</option>`).join('');
+  loadVisibility();
+}
+
+async function loadVisibility(){
+  const viewerId=document.getElementById('visViewer').value;
+  const {data}=await sb.from('user_visibility').select('target_id').eq('viewer_id',viewerId);
+  const checked=new Set((data||[]).map(r=>r.target_id));
+  const targets=allUsers.filter(u=>u.id!==viewerId);
+  document.getElementById('visTargetList').innerHTML=targets.length?
+    targets.map(u=>`
+      <div class="vis-row">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar" style="width:26px;height:26px;font-size:10px;background:${u.bg};color:${u.color}">${u.initials}</div>
+          <span>${u.name}</span>
+        </div>
+        <input type="checkbox" id="vis_${u.id}" value="${u.id}" ${checked.has(u.id)?'checked':''} style="width:18px;height:18px;cursor:pointer">
+      </div>`).join('')
+    :'<div style="color:#aaa;font-size:13px;padding:8px 0">Δεν υπάρχουν άλλοι χρήστες.</div>';
+}
+
+async function saveVisibility(){
+  const viewerId=document.getElementById('visViewer').value;
+  const checkboxes=document.querySelectorAll('#visTargetList input[type=checkbox]');
+  const selected=Array.from(checkboxes).filter(c=>c.checked).map(c=>c.value);
+  await sb.from('user_visibility').delete().eq('viewer_id',viewerId);
+  if(selected.length){
+    await sb.from('user_visibility').insert(selected.map(tid=>({viewer_id:viewerId,target_id:tid})));
+  }
+  document.getElementById('visOk').style.display='block';
+  setTimeout(()=>document.getElementById('visOk').style.display='none',2000);
 }
 
 init();
