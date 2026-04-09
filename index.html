@@ -5,27 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gardelis Medical</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
 .screen{display:none}.screen.active{display:block}
-.container{max-width:520px;margin:0 auto;padding:1rem}
+.container{max-width:560px;margin:0 auto;padding:1rem}
 .card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.25rem;margin-bottom:10px}
 .btn{cursor:pointer;border:1px solid #d0d0d0;border-radius:8px;padding:9px 18px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit;transition:background .15s}
 .btn:hover{background:#f0f0f0}
 .btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}.btn-primary:hover{background:#0C447C}
 .btn-danger{background:#fff0f0;color:#a32d2d;border-color:#f0c0c0}
+.btn-success{background:#eaf3de;color:#3b6d11;border-color:#c0dd97}
 .btn-sm{padding:5px 11px;font-size:12px}
 input,select,textarea{width:100%;padding:9px 12px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit}
 input:focus,select:focus,textarea:focus{outline:none;border-color:#185FA5}
+input[type=checkbox]{width:auto;cursor:pointer}
 label{font-size:13px;color:#666;display:block;margin-bottom:4px}
 .field{margin-bottom:12px}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0 16px;border-bottom:1px solid #eee;margin-bottom:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0 14px;border-bottom:1px solid #eee;margin-bottom:14px;gap:8px}
 .avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0}
 .tag{font-size:11px;padding:3px 9px;border-radius:6px;display:inline-block;margin-right:4px;font-weight:500}
 .role-badge{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500}
-.tabs{display:flex;gap:4px;margin-bottom:14px;background:#eee;border-radius:10px;padding:4px;flex-wrap:wrap}
-.tab{flex:1;min-width:48px;padding:7px;text-align:center;font-size:13px;border-radius:8px;cursor:pointer;color:#666;border:none;background:transparent;font-family:inherit}
+.tabs{display:flex;gap:4px;margin-bottom:12px;background:#eee;border-radius:10px;padding:4px;flex-wrap:wrap}
+.tab{flex:1;min-width:44px;padding:7px 4px;text-align:center;font-size:13px;border-radius:8px;cursor:pointer;color:#666;border:none;background:transparent;font-family:inherit}
 .tab.active{background:#fff;color:#1a1a1a;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#185FA5;border-radius:50%;animation:spin .7s linear infinite;margin:2rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -43,9 +46,34 @@ label{font-size:13px;color:#666;display:block;margin-bottom:4px}
 .vis-row:last-child{border-bottom:none}
 h2{font-size:18px;font-weight:500}
 h3{font-size:15px;font-weight:500}
-.date-filters{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.date-filters input{flex:1;min-width:120px;font-size:13px;padding:6px 10px}
-.date-filters label{font-size:12px;color:#888;margin-bottom:2px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:14px 12px;text-align:center}
+.stat-num{font-size:26px;font-weight:600;color:#185FA5}
+.stat-label{font-size:12px;color:#888;margin-top:2px}
+.member-stat{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5}
+.member-stat:last-child{border-bottom:none}
+.search-bar{display:flex;gap:8px;margin-bottom:8px}
+.search-bar input{flex:1}
+.sort-bar{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.sort-bar select{flex:1;font-size:13px;padding:6px 10px}
+.filters-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.filters-row select{flex:1;min-width:100px;font-size:13px;padding:6px 10px}
+.date-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.date-row>div{flex:1;min-width:120px}
+.date-row label{font-size:12px;color:#888;margin-bottom:2px}
+.date-row input{font-size:13px;padding:6px 10px}
+.comment-item{padding:8px 10px;background:#f8f8f8;border-radius:8px;margin-top:6px;font-size:13px}
+.comment-author{font-size:11px;color:#888;margin-bottom:3px}
+.comment-text{color:#1a1a1a;line-height:1.5}
+.comment-add{display:flex;gap:6px;margin-top:8px}
+.comment-add textarea{flex:1;min-height:60px;font-size:13px;padding:7px 10px;resize:vertical}
+.exam-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.1rem;margin-bottom:10px}
+.exam-collapsed .exam-body{display:none}
+.exam-toggle{cursor:pointer;user-select:none}
+.timeout-bar{position:fixed;bottom:0;left:0;right:0;background:#fff8e6;border-top:1px solid #f0d090;padding:10px 16px;font-size:13px;color:#854F0B;display:flex;justify-content:space-between;align-items:center;z-index:999}
+.nav-tabs{display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:16px}
+.nav-tab{padding:10px 18px;font-size:14px;cursor:pointer;border:none;background:transparent;color:#888;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px}
+.nav-tab.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:500}
 </style>
 </head>
 <body>
@@ -76,6 +104,10 @@ h3{font-size:15px;font-weight:500}
           <label>Κωδικός</label>
           <input type="password" id="loginPassword" placeholder="Εισάγετε κωδικό..." autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
         </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <input type="checkbox" id="rememberMe" style="width:16px;height:16px">
+          <label for="rememberMe" style="margin:0;cursor:pointer;font-size:13px;color:#555">Θυμήσου με σε αυτή τη συσκευή</label>
+        </div>
         <div id="loginError" class="alert alert-danger" style="display:none">Λάθος username ή κωδικός.</div>
         <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Είσοδος</button>
       </div>
@@ -101,46 +133,67 @@ h3{font-size:15px;font-weight:500}
       </div>
     </div>
 
-    <div id="readonlyBanner" class="alert alert-warning" style="display:none">
-      Λειτουργία μόνο ανάγνωσης — δεν μπορείτε να προσθέσετε ή να επεξεργαστείτε.
+    <!-- Nav tabs: Dashboard / Εξετάσεις -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="navDash" onclick="switchNav('dash')">Dashboard</button>
+      <button class="nav-tab" id="navExams" onclick="switchNav('exams')">Εξετάσεις</button>
     </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h2>Εξετάσεις</h2>
-      <button class="btn btn-primary btn-sm" id="addBtn" onclick="showAdd()" style="display:none">+ Νέα</button>
-    </div>
-
-    <div class="tabs" id="memberTabs"></div>
-
-    <!-- Φίλτρα -->
-    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      <select id="filterCat" style="flex:1;min-width:110px;font-size:13px;padding:6px 10px" onchange="renderExams()">
-        <option value="">Όλες κατηγορίες</option>
-        <option>Αιματολογικές</option><option>Απεικονιστικές</option>
-        <option>Καρδιολογικές</option><option>Άλλο</option>
-      </select>
-      <select id="filterRes" style="flex:1;min-width:100px;font-size:13px;padding:6px 10px" onchange="renderExams()">
-        <option value="">Όλα αποτελέσματα</option>
-        <option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option>
-      </select>
-    </div>
-    <div class="date-filters">
-      <div style="flex:1;min-width:120px">
-        <label>Από ημερομηνία</label>
-        <input type="date" id="filterDateFrom" onchange="renderExams()">
-      </div>
-      <div style="flex:1;min-width:120px">
-        <label>Έως ημερομηνία</label>
-        <input type="date" id="filterDateTo" onchange="renderExams()">
-      </div>
-      <div style="display:flex;align-items:flex-end">
-        <button class="btn btn-sm" onclick="clearDateFilters()" style="white-space:nowrap;margin-bottom:0">✕ Καθαρισμός</button>
+    <!-- DASHBOARD -->
+    <div id="dashView">
+      <div id="dashLoading"><div class="spinner"></div></div>
+      <div id="dashContent" style="display:none">
+        <div class="stat-grid" id="statCards"></div>
+        <h3 style="margin-bottom:10px">Τελευταία εξέταση ανά μέλος</h3>
+        <div class="card" style="padding:8px 16px" id="memberStats"></div>
       </div>
     </div>
 
-    <div id="examList"></div>
-    <div id="examLoading" style="display:none"><div class="spinner"></div></div>
-    <div id="emptyMsg" style="text-align:center;padding:2rem;color:#888;font-size:14px;display:none">Δεν υπάρχουν εξετάσεις.</div>
+    <!-- EXAMS VIEW -->
+    <div id="examsView" style="display:none">
+      <div id="readonlyBanner" class="alert alert-warning" style="display:none">
+        Λειτουργία μόνο ανάγνωσης.
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="tabs" id="memberTabs" style="flex:1;margin-bottom:0;margin-right:8px"></div>
+        <button class="btn btn-primary btn-sm" id="addBtn" onclick="showAdd()" style="display:none;white-space:nowrap">+ Νέα</button>
+      </div>
+      <div style="margin-top:10px">
+        <div class="search-bar">
+          <input type="text" id="searchBox" placeholder="Αναζήτηση εξέτασης, γιατρού, σημειώσεων..." oninput="renderExams()">
+          <button class="btn btn-sm" onclick="document.getElementById('searchBox').value='';renderExams()">✕</button>
+        </div>
+        <div class="filters-row">
+          <select id="filterCat" onchange="renderExams()">
+            <option value="">Όλες κατηγορίες</option>
+            <option>Αιματολογικές</option><option>Απεικονιστικές</option><option>Καρδιολογικές</option><option>Άλλο</option>
+          </select>
+          <select id="filterRes" onchange="renderExams()">
+            <option value="">Όλα αποτελέσματα</option>
+            <option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option>
+          </select>
+        </div>
+        <div class="date-row">
+          <div><label>Από ημερομηνία</label><input type="date" id="filterDateFrom" onchange="renderExams()"></div>
+          <div><label>Έως ημερομηνία</label><input type="date" id="filterDateTo" onchange="renderExams()"></div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn btn-sm" onclick="clearDateFilters()">✕ Καθαρισμός</button>
+          </div>
+        </div>
+        <div class="sort-bar">
+          <select id="sortBy" onchange="renderExams()">
+            <option value="date_desc">Ημερομηνία (νεότερο πρώτα)</option>
+            <option value="date_asc">Ημερομηνία (παλαιότερο πρώτα)</option>
+            <option value="name_asc">Όνομα (Α→Ω)</option>
+            <option value="name_desc">Όνομα (Ω→Α)</option>
+          </select>
+          <button class="btn btn-sm btn-success" id="exportBtn" onclick="exportPDF()">Export PDF</button>
+        </div>
+      </div>
+      <div id="examList"></div>
+      <div id="examLoading" style="display:none"><div class="spinner"></div></div>
+      <div id="emptyMsg" style="text-align:center;padding:2rem;color:#888;font-size:14px;display:none">Δεν υπάρχουν εξετάσεις.</div>
+    </div>
   </div>
 </div>
 
@@ -208,19 +261,15 @@ h3{font-size:15px;font-weight:500}
 <div id="adminScreen" class="screen">
   <div class="container">
     <div class="topbar"><h2>Πίνακας Admin</h2><button class="btn btn-sm" onclick="showMain()">✕</button></div>
-
-    <!-- User list -->
     <div id="adminUserList"></div>
-
-    <!-- Add/Edit user form -->
     <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
       <h3 style="margin-bottom:12px" id="userFormTitle">Προσθήκη χρήστη</h3>
       <div class="card">
         <input type="hidden" id="editUserId">
-        <div class="field"><label>Όνομα *</label><input type="text" id="editUserName" placeholder="Πλήρες όνομα"></div>
-        <div class="field"><label>Username * (για login)</label><input type="text" id="editUserUsername" placeholder="π.χ. andreas" autocomplete="off"></div>
-        <div class="field"><label>Αρχικά (2 γράμματα)</label><input type="text" id="editUserInitials" maxlength="2" placeholder="π.χ. ΑΓ"></div>
-        <div class="field"><label>Ρόλος / Σχέση</label><input type="text" id="editUserRole" placeholder="π.χ. Πατέρας, Μητέρα..."></div>
+        <div class="field"><label>Όνομα *</label><input type="text" id="editUserName"></div>
+        <div class="field"><label>Username * (για login)</label><input type="text" id="editUserUsername" autocomplete="off"></div>
+        <div class="field"><label>Αρχικά (2 γράμματα)</label><input type="text" id="editUserInitials" maxlength="2"></div>
+        <div class="field"><label>Ρόλος / Σχέση</label><input type="text" id="editUserRole" placeholder="π.χ. Πατέρας"></div>
         <div class="field"><label>Δικαιώματα</label>
           <select id="editUserPerm">
             <option value="rw">Read & Write (Admin)</option>
@@ -235,26 +284,31 @@ h3{font-size:15px;font-weight:500}
         </div>
       </div>
     </div>
-
-    <!-- Visibility management -->
-    <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px" id="visSection" style="display:none">
+    <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
       <h3 style="margin-bottom:4px">Ορατότητα χρηστών</h3>
-      <div style="font-size:12px;color:#888;margin-bottom:12px">Ορίστε ποιος χρήστης βλέπει τις εξετάσεις ποιων άλλων.</div>
-      <div class="field"><label>Επιλογή χρήστη</label>
-        <select id="visViewer" onchange="loadVisibility()"></select>
-      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px">Ποιος βλέπει τις εξετάσεις ποιων άλλων.</div>
+      <div class="field"><label>Επιλογή χρήστη</label><select id="visViewer" onchange="loadVisibility()"></select></div>
       <div class="card" id="visTargetList" style="padding:8px 14px"></div>
       <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveVisibility()">Αποθήκευση ορατότητας</button>
       <div id="visOk" class="alert alert-success" style="display:none;margin-top:8px">Αποθηκεύτηκε!</div>
     </div>
-
   </div>
+</div>
+
+<!-- SESSION TIMEOUT WARNING -->
+<div id="timeoutBar" class="timeout-bar" style="display:none">
+  <span id="timeoutMsg"></span>
+  <button class="btn btn-sm" onclick="resetTimeout()">Παραμονή</button>
 </div>
 
 <script>
 const SUPABASE_URL='https://hhaqhdzuevyualtgkpkp.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYXFoZHp1ZXZ5dWFsdGdrcGtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDkzMTQsImV4cCI6MjA5MTIyNTMxNH0.n5HlgLXfHaU59TS1OGUNS7c-glqyVjV7zqMR9UhnfE4';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const SESSION_KEY='gm_session';
+const TIMEOUT_MINUTES=15;
+const WARN_MINUTES=2;
 
 const COLORS=[
   {bg:'#E6F1FB',color:'#185FA5'},{bg:'#E1F5EE',color:'#0F6E56'},
@@ -264,42 +318,106 @@ const COLORS=[
 const rsStyle={'Κανονικό':{bg:'#EAF3DE',color:'#3B6D11'},'Παθολογικό':{bg:'#FCEBEB',color:'#A32D2D'},'Εκκρεμεί':{bg:'#FAEEDA',color:'#854F0B'}};
 const catStyle={'Αιματολογικές':{bg:'#E6F1FB',color:'#185FA5'},'Απεικονιστικές':{bg:'#EEEDFE',color:'#3C3489'},'Καρδιολογικές':{bg:'#FAECE7',color:'#993C1D'},'Άλλο':{bg:'#f0f0f0',color:'#555'}};
 
-let currentUser=null, allUsers=[], visibleUserIds=[], activeTab='all', editingExamId=null, pendingFiles=[];
+let currentUser=null,allUsers=[],visibleUserIds=[],activeTab='all',editingExamId=null,pendingFiles=[];
+let timeoutTimer=null,warnTimer=null,lastActivity=Date.now();
+let currentNav='dash';
 
+// ── SESSION ──────────────────────────────────────────────
+function saveSession(user,remember){
+  const data={userId:user.id,remember,ts:Date.now()};
+  localStorage.setItem(SESSION_KEY,JSON.stringify(data));
+  sessionStorage.setItem(SESSION_KEY,JSON.stringify(data));
+}
+function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+}
+function loadSession(){
+  // sessionStorage: shared across tabs in same browser session
+  let raw=sessionStorage.getItem(SESSION_KEY);
+  if(!raw) raw=localStorage.getItem(SESSION_KEY);
+  if(!raw) return null;
+  try{ return JSON.parse(raw); }catch{ return null; }
+}
+
+// ── TIMEOUT ───────────────────────────────────────────────
+function resetTimeout(){
+  lastActivity=Date.now();
+  document.getElementById('timeoutBar').style.display='none';
+  clearTimeout(timeoutTimer);clearTimeout(warnTimer);
+  if(!currentUser) return;
+  const session=loadSession();
+  if(session&&session.remember) return; // no timeout if remembered
+  warnTimer=setTimeout(showTimeoutWarning,(TIMEOUT_MINUTES-WARN_MINUTES)*60*1000);
+  timeoutTimer=setTimeout(()=>{ logout(true); },TIMEOUT_MINUTES*60*1000);
+}
+function showTimeoutWarning(){
+  let secs=WARN_MINUTES*60;
+  document.getElementById('timeoutBar').style.display='flex';
+  const iv=setInterval(()=>{
+    secs--;
+    document.getElementById('timeoutMsg').textContent=`Αυτόματη αποσύνδεση σε ${secs} δευτερόλεπτα λόγω αδράνειας.`;
+    if(secs<=0) clearInterval(iv);
+  },1000);
+  document.getElementById('timeoutMsg').textContent=`Αυτόματη αποσύνδεση σε ${secs} δευτερόλεπτα λόγω αδράνειας.`;
+}
+['click','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,()=>{ if(currentUser) resetTimeout(); },{passive:true}));
+
+// ── UTILS ─────────────────────────────────────────────────
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function switchNav(nav){
+  currentNav=nav;
+  document.getElementById('navDash').classList.toggle('active',nav==='dash');
+  document.getElementById('navExams').classList.toggle('active',nav==='exams');
+  document.getElementById('dashView').style.display=nav==='dash'?'block':'none';
+  document.getElementById('examsView').style.display=nav==='exams'?'block':'none';
+  if(nav==='dash') loadDashboard();
+  if(nav==='exams') renderExams();
+}
 
+// ── INIT ──────────────────────────────────────────────────
 async function init(){
   show('loadingScreen');
   const {data,error}=await sb.from('users').select('*').order('created_at');
-  if(error){document.getElementById('loadingScreen').innerHTML='<div class="container" style="padding-top:3rem;text-align:center"><div class="alert alert-danger">Σφάλμα σύνδεσης. Ανανεώστε τη σελίδα.</div></div>';return}
+  if(error){document.getElementById('loadingScreen').innerHTML='<div class="container" style="padding-top:3rem"><div class="alert alert-danger">Σφάλμα σύνδεσης. Ανανεώστε τη σελίδα.</div></div>';return}
   allUsers=data||[];
+  // try auto-login from session
+  const session=loadSession();
+  if(session){
+    const user=allUsers.find(u=>u.id===session.userId);
+    if(user){
+      currentUser=user;
+      await loadVisibleUsers();
+      setupMain();
+      show('mainScreen');
+      resetTimeout();
+      return;
+    }
+  }
   show('loginScreen');
 }
 
+// ── LOGIN ─────────────────────────────────────────────────
 async function doLogin(){
   const username=document.getElementById('loginUsername').value.trim().toLowerCase();
   const password=document.getElementById('loginPassword').value;
+  const remember=document.getElementById('rememberMe').checked;
   document.getElementById('loginError').style.display='none';
   if(!username||!password){document.getElementById('loginError').style.display='block';return}
   const user=allUsers.find(u=>u.username&&u.username.toLowerCase()===username);
   if(!user||user.pin!==password){document.getElementById('loginError').style.display='block';return}
   currentUser=user;
+  saveSession(user,remember);
   await loadVisibleUsers();
   setupMain();
   show('mainScreen');
+  resetTimeout();
 }
 
 async function loadVisibleUsers(){
-  if(currentUser.perm==='rw'){
-    visibleUserIds=allUsers.map(u=>u.id);
-    return;
-  }
+  if(currentUser.perm==='rw'){visibleUserIds=allUsers.map(u=>u.id);return}
   const {data}=await sb.from('user_visibility').select('target_id').eq('viewer_id',currentUser.id);
-  if(data&&data.length){
-    visibleUserIds=[currentUser.id,...data.map(r=>r.target_id)];
-  } else {
-    visibleUserIds=[currentUser.id];
-  }
+  visibleUserIds=[currentUser.id,...(data||[]).map(r=>r.target_id)];
 }
 
 function setupMain(){
@@ -312,40 +430,84 @@ function setupMain(){
   document.getElementById('adminBtn').style.display=u.perm==='rw'?'':'none';
   document.getElementById('readonlyBanner').style.display=u.perm==='r'?'block':'none';
   buildTabs();
-  activeTab='all';
-  clearDateFilters(false);
-  renderExams();
+  switchNav('dash');
   populateOwnerSelect();
 }
 
-function buildTabs(){
-  const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
-  const tabs=document.getElementById('memberTabs');
-  tabs.innerHTML=`<button class="tab active" id="tabAll" onclick="switchTab('all')">Όλα</button>`
-    +visUsers.map(u=>`<button class="tab" id="tab_${u.id}" onclick="switchTab('${u.id}')">${u.initials}</button>`).join('');
+function logout(auto=false){
+  clearSession();
+  clearTimeout(timeoutTimer);clearTimeout(warnTimer);
+  document.getElementById('timeoutBar').style.display='none';
+  currentUser=null;visibleUserIds=[];
+  document.getElementById('loginUsername').value='';
+  document.getElementById('loginPassword').value='';
+  document.getElementById('loginError').style.display='none';
+  if(auto){
+    document.getElementById('loginError').textContent='Αποσυνδεθήκατε αυτόματα λόγω αδράνειας.';
+    document.getElementById('loginError').style.display='block';
+  }
+  show('loginScreen');
 }
 
+// ── DASHBOARD ─────────────────────────────────────────────
+async function loadDashboard(){
+  document.getElementById('dashLoading').style.display='block';
+  document.getElementById('dashContent').style.display='none';
+  const {data:exams}=await sb.from('exams').select('*').in('owner_id',visibleUserIds);
+  document.getElementById('dashLoading').style.display='none';
+  document.getElementById('dashContent').style.display='block';
+  const total=exams?exams.length:0;
+  const pathol=exams?exams.filter(e=>e.result==='Παθολογικό').length:0;
+  const pending=exams?exams.filter(e=>e.result==='Εκκρεμεί').length:0;
+  const normal=exams?exams.filter(e=>e.result==='Κανονικό').length:0;
+  document.getElementById('statCards').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Σύνολο εξετάσεων</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#3b6d11">${normal}</div><div class="stat-label">Κανονικές</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#a32d2d">${pathol}</div><div class="stat-label">Παθολογικές</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#854F0B">${pending}</div><div class="stat-label">Εκκρεμείς</div></div>`;
+  const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
+  document.getElementById('memberStats').innerHTML=visUsers.map(u=>{
+    const userExams=exams?exams.filter(e=>e.owner_id===u.id):[];
+    const last=userExams.sort((a,b)=>new Date(b.exam_date)-new Date(a.exam_date))[0];
+    const lastStr=last&&last.exam_date?new Date(last.exam_date).toLocaleDateString('el-GR'):'—';
+    const lastName=last?last.name:'—';
+    return `<div class="member-stat">
+      <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${u.bg};color:${u.color}">${u.initials}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500">${u.name}</div>
+        <div style="font-size:12px;color:#888">${userExams.length} εξετάσεις &nbsp;·&nbsp; Τελευταία: ${lastName} (${lastStr})</div>
+      </div>
+      <button class="btn btn-sm" onclick="switchNav('exams');switchTab('${u.id}')">Προβολή</button>
+    </div>`;
+  }).join('');
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function buildTabs(){
+  const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
+  document.getElementById('memberTabs').innerHTML=
+    `<button class="tab active" id="tabAll" onclick="switchTab('all')">Όλα</button>`+
+    visUsers.map(u=>`<button class="tab" id="tab_${u.id}" onclick="switchTab('${u.id}')">${u.initials}</button>`).join('');
+}
 function switchTab(t){
   activeTab=t;
   document.getElementById('tabAll').classList.toggle('active',t==='all');
   allUsers.forEach(u=>{const el=document.getElementById('tab_'+u.id);if(el)el.classList.toggle('active',t===u.id)});
   renderExams();
 }
-
-function clearDateFilters(rerender=true){
+function clearDateFilters(){
   document.getElementById('filterDateFrom').value='';
   document.getElementById('filterDateTo').value='';
-  if(rerender)renderExams();
+  renderExams();
 }
 
+// ── EXAMS ─────────────────────────────────────────────────
 async function renderExams(){
   document.getElementById('examList').innerHTML='';
   document.getElementById('emptyMsg').style.display='none';
   document.getElementById('examLoading').style.display='block';
-
   let ownerIds=activeTab==='all'?visibleUserIds:[activeTab];
-  let q=sb.from('exams').select('*').in('owner_id',ownerIds).order('exam_date',{ascending:false});
-
+  let q=sb.from('exams').select('*').in('owner_id',ownerIds);
   const cat=document.getElementById('filterCat').value;
   const res=document.getElementById('filterRes').value;
   const dateFrom=document.getElementById('filterDateFrom').value;
@@ -354,65 +516,115 @@ async function renderExams(){
   if(res)q=q.eq('result',res);
   if(dateFrom)q=q.gte('exam_date',dateFrom);
   if(dateTo)q=q.lte('exam_date',dateTo);
-
   const {data,error}=await q;
   document.getElementById('examLoading').style.display='none';
-  if(error||!data||!data.length){document.getElementById('emptyMsg').style.display='block';return}
+  let exams=data||[];
 
+  // client-side search & sort
+  const search=document.getElementById('searchBox').value.trim().toLowerCase();
+  if(search) exams=exams.filter(e=>(e.name||'').toLowerCase().includes(search)||(e.notes||'').toLowerCase().includes(search)||(e.doctor||'').toLowerCase().includes(search));
+  const sort=document.getElementById('sortBy').value;
+  exams.sort((a,b)=>{
+    if(sort==='date_desc') return new Date(b.exam_date||0)-new Date(a.exam_date||0);
+    if(sort==='date_asc') return new Date(a.exam_date||0)-new Date(b.exam_date||0);
+    if(sort==='name_asc') return (a.name||'').localeCompare(b.name||'','el');
+    if(sort==='name_desc') return (b.name||'').localeCompare(a.name||'','el');
+    return 0;
+  });
+
+  if(!exams.length){document.getElementById('emptyMsg').style.display='block';return}
   const canWrite=currentUser&&currentUser.perm==='rw';
-  document.getElementById('examList').innerHTML=data.map(e=>{
+  document.getElementById('examList').innerHTML=exams.map(e=>{
     const owner=allUsers.find(u=>u.id===e.owner_id);
     const rs=rsStyle[e.result]||rsStyle['Εκκρεμεί'];
     const cs=catStyle[e.category]||catStyle['Άλλο'];
     const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR'):'';
-    return `<div class="card">
+    return `<div class="exam-card" id="ec_${e.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1">
           ${owner?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <div class="avatar" style="width:22px;height:22px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div>
+            <div class="avatar" style="width:20px;height:20px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div>
             <span style="font-size:12px;color:#888">${owner.name}</span>
           </div>`:''}
-          <div style="font-weight:500;font-size:15px;margin-bottom:6px">${e.name}</div>
-          <div style="margin-bottom:6px">
+          <div style="font-weight:500;font-size:15px;margin-bottom:5px">${e.name}</div>
+          <div style="margin-bottom:5px">
             <span class="tag" style="background:${cs.bg};color:${cs.color}">${e.category||''}</span>
             <span class="tag" style="background:${rs.bg};color:${rs.color}">${e.result||''}</span>
           </div>
-          ${dateStr?`<div style="font-size:12px;color:#888;margin-bottom:3px">${dateStr}</div>`:''}
-          ${e.doctor?`<div style="font-size:12px;color:#888;margin-bottom:3px">${e.doctor}</div>`:''}
-          ${e.notes?`<div style="font-size:13px;padding:8px;background:#f8f8f8;border-radius:8px;margin-top:6px">${e.notes}</div>`:''}
+          ${dateStr?`<div style="font-size:12px;color:#888;margin-bottom:2px">${dateStr}</div>`:''}
+          ${e.doctor?`<div style="font-size:12px;color:#888;margin-bottom:2px">${e.doctor}</div>`:''}
+          ${e.notes?`<div style="font-size:13px;padding:8px;background:#f8f8f8;border-radius:8px;margin-top:5px;line-height:1.5">${e.notes}</div>`:''}
           <div id="files_${e.id}"><span style="font-size:12px;color:#ccc">φόρτωση...</span></div>
+          <!-- COMMENTS -->
+          <div style="margin-top:10px;border-top:1px solid #f0f0f0;padding-top:8px">
+            <div style="font-size:12px;font-weight:500;color:#666;margin-bottom:6px">Σχόλια / Οδηγίες γιατρού</div>
+            <div id="comments_${e.id}"><span style="font-size:12px;color:#ccc">φόρτωση...</span></div>
+            <div class="comment-add">
+              <textarea id="ctxt_${e.id}" placeholder="Προσθήκη σχολίου ή οδηγίας..."></textarea>
+              <button class="btn btn-sm btn-primary" style="align-self:flex-end" onclick="addComment('${e.id}')">Αποστολή</button>
+            </div>
+          </div>
         </div>
         ${canWrite?`<div style="display:flex;gap:5px;flex-shrink:0">
           <button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button>
-          <button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή εξέτασης;'))delExam('${e.id}')">Διαγ.</button>
+          <button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή;'))delExam('${e.id}')">Διαγ.</button>
         </div>`:''}
       </div>
     </div>`;
   }).join('');
-  data.forEach(e=>loadFiles(e.id));
+  exams.forEach(e=>{loadFiles(e.id);loadComments(e.id)});
 }
 
+// ── FILES ─────────────────────────────────────────────────
 async function loadFiles(examId){
   const {data}=await sb.from('files').select('*').eq('exam_id',examId);
-  const el=document.getElementById('files_'+examId);
-  if(!el)return;
+  const el=document.getElementById('files_'+examId);if(!el)return;
   if(!data||!data.length){el.innerHTML='';return}
   const canWrite=currentUser&&currentUser.perm==='rw';
-  el.innerHTML=data.map(f=>`
-    <div class="pdf-item">
-      <div class="pdf-icon">PDF</div>
-      <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
-      ${canWrite?`<button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${examId}')">✕</button>`:''}
-    </div>`).join('');
+  el.innerHTML=data.map(f=>`<div class="pdf-item">
+    <div class="pdf-icon">PDF</div>
+    <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
+    ${canWrite?`<button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${examId}')">✕</button>`:''}
+  </div>`).join('');
 }
-
-async function delFile(fileId,path,examId){
+async function delFile(fid,path,examId){
   if(!confirm('Διαγραφή αρχείου;'))return;
   await sb.storage.from('medical-files').remove([path]);
-  await sb.from('files').delete().eq('id',fileId);
+  await sb.from('files').delete().eq('id',fid);
   loadFiles(examId);
 }
 
+// ── COMMENTS ──────────────────────────────────────────────
+async function loadComments(examId){
+  const {data}=await sb.from('exam_comments').select('*').eq('exam_id',examId).order('created_at');
+  const el=document.getElementById('comments_'+examId);if(!el)return;
+  if(!data||!data.length){el.innerHTML='<span style="font-size:12px;color:#aaa">Δεν υπάρχουν σχόλια ακόμα.</span>';return}
+  el.innerHTML=data.map(c=>{
+    const author=allUsers.find(u=>u.id===c.author_id);
+    const dt=new Date(c.created_at).toLocaleString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="comment-item">
+      <div class="comment-author">${author?author.name:'—'} · ${dt}
+        ${currentUser&&(currentUser.perm==='rw'||currentUser.id===c.author_id)?
+          `<button class="btn btn-sm btn-danger" style="padding:1px 7px;font-size:11px;float:right" onclick="delComment('${c.id}','${examId}')">✕</button>`:''}
+      </div>
+      <div class="comment-text">${c.comment.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  }).join('');
+}
+async function addComment(examId){
+  const txt=document.getElementById('ctxt_'+examId).value.trim();
+  if(!txt)return;
+  await sb.from('exam_comments').insert({exam_id:examId,author_id:currentUser.id,comment:txt});
+  document.getElementById('ctxt_'+examId).value='';
+  loadComments(examId);
+}
+async function delComment(cid,examId){
+  if(!confirm('Διαγραφή σχολίου;'))return;
+  await sb.from('exam_comments').delete().eq('id',cid);
+  loadComments(examId);
+}
+
+// ── ADD/EDIT EXAM ─────────────────────────────────────────
 function showAdd(){
   editingExamId=null;pendingFiles=[];
   document.getElementById('addTitle').textContent='Νέα Εξέταση';
@@ -427,7 +639,6 @@ function showAdd(){
   document.getElementById('saveLoading').style.display='none';
   show('addScreen');
 }
-
 async function editExam(id){
   const {data}=await sb.from('exams').select('*').eq('id',id).single();
   if(!data)return;
@@ -444,8 +655,7 @@ async function editExam(id){
   document.getElementById('saveError').style.display='none';
   document.getElementById('saveLoading').style.display='none';
   const {data:files}=await sb.from('files').select('*').eq('exam_id',id);
-  const ef=document.getElementById('existingFiles');
-  ef.innerHTML=(files&&files.length)?
+  document.getElementById('existingFiles').innerHTML=(files&&files.length)?
     '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Υπάρχοντα αρχεία:</div>'+
     files.map(f=>`<div class="pdf-item"><div class="pdf-icon">PDF</div>
       <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
@@ -453,23 +663,17 @@ async function editExam(id){
     </div>`).join(''):'';
   show('addScreen');
 }
-
-function handleFileSelect(e){
-  pendingFiles=[...pendingFiles,...Array.from(e.target.files)];
-  renderPendingFiles();
-}
+function handleFileSelect(e){pendingFiles=[...pendingFiles,...Array.from(e.target.files)];renderPendingFiles()}
 function removePending(i){pendingFiles.splice(i,1);document.getElementById('pdfInput').value='';renderPendingFiles()}
 function renderPendingFiles(){
   document.getElementById('selectedFiles').innerHTML=pendingFiles.length?
     '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Νέα αρχεία:</div>'+
     pendingFiles.map((f,i)=>`<div class="pdf-item"><div class="pdf-icon">PDF</div><span style="flex:1;font-size:13px">${f.name}</span><button class="btn btn-sm btn-danger" onclick="removePending(${i})">✕</button></div>`).join(''):'';
 }
-
 function populateOwnerSelect(){
   const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
   document.getElementById('examOwner').innerHTML=visUsers.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
 }
-
 async function saveExam(){
   const name=document.getElementById('examName').value.trim();
   if(!name){document.getElementById('saveError').style.display='block';return}
@@ -487,38 +691,63 @@ async function saveExam(){
   for(const file of pendingFiles){
     const path=`${examId}/${Date.now()}_${file.name}`;
     const {error}=await sb.storage.from('medical-files').upload(path,file);
-    if(!error)await sb.from('files').insert({exam_id:examId,file_name:file.name,storage_path:path});
+    if(!error) await sb.from('files').insert({exam_id:examId,file_name:file.name,storage_path:path});
   }
   document.getElementById('saveBtn').disabled=false;
   editingExamId=null;pendingFiles=[];
   showMain();
 }
-
 async function delExam(id){
   const {data:files}=await sb.from('files').select('storage_path').eq('exam_id',id);
-  if(files&&files.length)await sb.storage.from('medical-files').remove(files.map(f=>f.storage_path));
+  if(files&&files.length) await sb.storage.from('medical-files').remove(files.map(f=>f.storage_path));
   await sb.from('files').delete().eq('exam_id',id);
+  await sb.from('exam_comments').delete().eq('exam_id',id);
   await sb.from('exams').delete().eq('id',id);
   renderExams();
 }
 
-function showMain(){editingExamId=null;pendingFiles=[];show('mainScreen');renderExams()}
-
-function logout(){
-  currentUser=null;visibleUserIds=[];
-  document.getElementById('loginUsername').value='';
-  document.getElementById('loginPassword').value='';
-  document.getElementById('loginError').style.display='none';
-  show('loginScreen');
+// ── EXPORT PDF ────────────────────────────────────────────
+async function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  let ownerIds=activeTab==='all'?visibleUserIds:[activeTab];
+  const {data:exams}=await sb.from('exams').select('*').in('owner_id',ownerIds).order('exam_date',{ascending:false});
+  if(!exams||!exams.length){alert('Δεν υπάρχουν εξετάσεις για εξαγωγή.');return}
+  doc.setFont('helvetica');
+  doc.setFontSize(16);doc.text('Gardelis Medical - Ιστορικό Εξετάσεων',14,18);
+  doc.setFontSize(10);doc.setTextColor(120);
+  doc.text('Εκτυπώθηκε: '+new Date().toLocaleDateString('el-GR'),14,26);
+  doc.setTextColor(0);
+  let y=36;
+  exams.forEach(e=>{
+    const owner=allUsers.find(u=>u.id===e.owner_id);
+    const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR'):'';
+    if(y>265){doc.addPage();y=20}
+    doc.setFontSize(12);doc.setFont('helvetica','bold');
+    doc.text((e.name||'')+(dateStr?' - '+dateStr:''),14,y);y+=6;
+    doc.setFont('helvetica','normal');doc.setFontSize(10);
+    if(owner) {doc.setTextColor(100);doc.text(owner.name,14,y);y+=5;doc.setTextColor(0)}
+    if(e.category||e.result) {doc.text((e.category||'')+' | '+(e.result||''),14,y);y+=5}
+    if(e.doctor) {doc.text('Γιατρός: '+e.doctor,14,y);y+=5}
+    if(e.notes){
+      const lines=doc.splitTextToSize('Σημειώσεις: '+e.notes,180);
+      lines.forEach(l=>{if(y>265){doc.addPage();y=20}doc.text(l,14,y);y+=5});
+    }
+    doc.setDrawColor(220);doc.line(14,y,196,y);y+=6;
+  });
+  doc.save('gardelis-medical-'+new Date().toISOString().split('T')[0]+'.pdf');
 }
 
+// ── MAIN NAV ──────────────────────────────────────────────
+function showMain(){editingExamId=null;pendingFiles=[];show('mainScreen');if(currentNav==='dash')loadDashboard();else renderExams()}
+
+// ── CHANGE PIN ────────────────────────────────────────────
 function showChangePin(){
   ['oldPin','newPin','newPin2'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pinChgErr').style.display='none';
   document.getElementById('pinChgOk').style.display='none';
   show('pinScreen');
 }
-
 async function doChangePin(){
   const old=document.getElementById('oldPin').value,n1=document.getElementById('newPin').value,n2=document.getElementById('newPin2').value;
   const err=document.getElementById('pinChgErr'),ok=document.getElementById('pinChgOk');
@@ -532,34 +761,27 @@ async function doChangePin(){
   ok.style.display='block';setTimeout(showMain,1400);
 }
 
+// ── ADMIN ─────────────────────────────────────────────────
 async function showAdmin(){
-  await refreshUsers();
-  renderAdminUsers();
-  clearUserForm();
-  populateVisViewer();
-  document.getElementById('visSection').style.display='block';
-  show('adminScreen');
+  await refreshUsers();renderAdminUsers();clearUserForm();populateVisViewer();show('adminScreen');
 }
-
 async function refreshUsers(){
   const {data}=await sb.from('users').select('*').order('created_at');
   allUsers=data||[];
 }
-
 function renderAdminUsers(){
   document.getElementById('adminUserList').innerHTML=allUsers.map(u=>`
     <div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 14px">
       <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${u.bg};color:${u.color}">${u.initials}</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:500">${u.name}</div>
-        <div style="font-size:12px;color:#888">${u.role} &nbsp;·&nbsp; <span style="color:#185FA5">@${u.username||'—'}</span></div>
+        <div style="font-size:12px;color:#888">@${u.username||'—'} · ${u.role}</div>
       </div>
       <span class="role-badge" style="background:${u.perm==='rw'?'#e6f1fb':'#f0f0f0'};color:${u.perm==='rw'?'#185FA5':'#666'}">${u.perm==='rw'?'Admin':'Read'}</span>
       <button class="btn btn-sm" onclick="loadUserEdit('${u.id}')">Επεξ.</button>
       ${u.id!==currentUser.id?`<button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή χρήστη;'))deleteUser('${u.id}')">Διαγ.</button>`:''}
     </div>`).join('');
 }
-
 function loadUserEdit(id){
   const u=allUsers.find(x=>x.id===id);if(!u)return;
   document.getElementById('editUserId').value=u.id;
@@ -572,7 +794,6 @@ function loadUserEdit(id){
   document.getElementById('adminErr').style.display='none';
   document.getElementById('adminOk').style.display='none';
 }
-
 function clearUserForm(){
   ['editUserId','editUserName','editUserUsername','editUserInitials','editUserRole'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('editUserPerm').value='r';
@@ -580,7 +801,6 @@ function clearUserForm(){
   document.getElementById('adminOk').style.display='none';
   document.getElementById('userFormTitle').textContent='Προσθήκη χρήστη';
 }
-
 async function saveUser(){
   const name=document.getElementById('editUserName').value.trim();
   const username=document.getElementById('editUserUsername').value.trim().toLowerCase();
@@ -590,12 +810,12 @@ async function saveUser(){
   const err=document.getElementById('adminErr'),ok=document.getElementById('adminOk');
   err.style.display='none';ok.style.display='none';
   if(!name||!username||!initials){err.textContent='Συμπληρώστε όνομα, username και αρχικά.';err.style.display='block';return}
-  const duplicate=allUsers.find(u=>u.username===username&&u.id!==document.getElementById('editUserId').value);
-  if(duplicate){err.textContent='Το username χρησιμοποιείται ήδη.';err.style.display='block';return}
+  const dup=allUsers.find(u=>u.username===username&&u.id!==document.getElementById('editUserId').value);
+  if(dup){err.textContent='Το username χρησιμοποιείται ήδη.';err.style.display='block';return}
   const uid=document.getElementById('editUserId').value;
   if(uid){
     await sb.from('users').update({name,username,initials,role,perm}).eq('id',uid);
-    if(uid===currentUser.id)currentUser={...currentUser,name,username,initials,role,perm};
+    if(uid===currentUser.id) currentUser={...currentUser,name,username,initials,role,perm};
   } else {
     const ci=allUsers.length%COLORS.length;
     await sb.from('users').insert({name,username,initials,role,perm,pin:'1234',bg:COLORS[ci].bg,color:COLORS[ci].color});
@@ -603,45 +823,38 @@ async function saveUser(){
   await refreshUsers();renderAdminUsers();clearUserForm();populateVisViewer();
   ok.style.display='block';setTimeout(()=>ok.style.display='none',2000);
 }
-
 async function deleteUser(id){
   await sb.from('user_visibility').delete().or(`viewer_id.eq.${id},target_id.eq.${id}`);
   await sb.from('users').delete().eq('id',id);
   await refreshUsers();renderAdminUsers();populateVisViewer();
 }
 
-// --- Visibility management ---
+// ── VISIBILITY ────────────────────────────────────────────
 function populateVisViewer(){
   const sel=document.getElementById('visViewer');
   sel.innerHTML=allUsers.map(u=>`<option value="${u.id}">${u.name} (@${u.username||'—'})</option>`).join('');
   loadVisibility();
 }
-
 async function loadVisibility(){
   const viewerId=document.getElementById('visViewer').value;
   const {data}=await sb.from('user_visibility').select('target_id').eq('viewer_id',viewerId);
   const checked=new Set((data||[]).map(r=>r.target_id));
   const targets=allUsers.filter(u=>u.id!==viewerId);
   document.getElementById('visTargetList').innerHTML=targets.length?
-    targets.map(u=>`
-      <div class="vis-row">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="avatar" style="width:26px;height:26px;font-size:10px;background:${u.bg};color:${u.color}">${u.initials}</div>
-          <span>${u.name}</span>
-        </div>
-        <input type="checkbox" id="vis_${u.id}" value="${u.id}" ${checked.has(u.id)?'checked':''} style="width:18px;height:18px;cursor:pointer">
-      </div>`).join('')
+    targets.map(u=>`<div class="vis-row">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="avatar" style="width:26px;height:26px;font-size:10px;background:${u.bg};color:${u.color}">${u.initials}</div>
+        <span>${u.name}</span>
+      </div>
+      <input type="checkbox" id="vis_${u.id}" value="${u.id}" ${checked.has(u.id)?'checked':''} style="width:18px;height:18px;cursor:pointer">
+    </div>`).join('')
     :'<div style="color:#aaa;font-size:13px;padding:8px 0">Δεν υπάρχουν άλλοι χρήστες.</div>';
 }
-
 async function saveVisibility(){
   const viewerId=document.getElementById('visViewer').value;
-  const checkboxes=document.querySelectorAll('#visTargetList input[type=checkbox]');
-  const selected=Array.from(checkboxes).filter(c=>c.checked).map(c=>c.value);
+  const selected=Array.from(document.querySelectorAll('#visTargetList input[type=checkbox]')).filter(c=>c.checked).map(c=>c.value);
   await sb.from('user_visibility').delete().eq('viewer_id',viewerId);
-  if(selected.length){
-    await sb.from('user_visibility').insert(selected.map(tid=>({viewer_id:viewerId,target_id:tid})));
-  }
+  if(selected.length) await sb.from('user_visibility').insert(selected.map(tid=>({viewer_id:viewerId,target_id:tid})));
   document.getElementById('visOk').style.display='block';
   setTimeout(()=>document.getElementById('visOk').style.display='none',2000);
 }
