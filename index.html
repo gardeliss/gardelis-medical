@@ -246,6 +246,40 @@ h3{font-size:15px;font-weight:500}
         <h2>Ιστορικό αλλαγών</h2>
         <button class="btn btn-sm btn-danger" onclick="if(confirm('Εκκαθάριση ιστορικού;'))clearAudit()">Εκκαθάριση</button>
       </div>
+      <!-- Filters -->
+      <div class="card" style="padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <select id="auditFilterUser" style="flex:1;min-width:130px;font-size:13px;padding:6px 10px" onchange="loadAudit()">
+            <option value="">Όλοι οι χρήστες</option>
+          </select>
+          <select id="auditFilterAction" style="flex:1;min-width:130px;font-size:13px;padding:6px 10px" onchange="loadAudit()">
+            <option value="">Όλοι οι τύποι</option>
+            <option value="LOGIN">Σύνδεση</option>
+            <option value="LOGOUT">Αποσύνδεση</option>
+            <option value="CREATE">Δημιουργία</option>
+            <option value="UPDATE">Επεξεργασία</option>
+            <option value="DELETE">Διαγραφή</option>
+            <option value="EXPORT">Εξαγωγή</option>
+            <option value="IMPORT">Εισαγωγή</option>
+          </select>
+          <select id="auditSort" style="flex:1;min-width:130px;font-size:13px;padding:6px 10px" onchange="loadAudit()">
+            <option value="desc">Νεότερο πρώτα</option>
+            <option value="asc">Παλαιότερο πρώτα</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:130px">
+            <label style="font-size:12px;color:#888;margin-bottom:2px">Από ημερομηνία</label>
+            <input type="date" id="auditDateFrom" style="font-size:13px;padding:6px 10px" onchange="loadAudit()">
+          </div>
+          <div style="flex:1;min-width:130px">
+            <label style="font-size:12px;color:#888;margin-bottom:2px">Έως ημερομηνία</label>
+            <input type="date" id="auditDateTo" style="font-size:13px;padding:6px 10px" onchange="loadAudit()">
+          </div>
+          <button class="btn btn-sm" onclick="clearAuditFilters()">✕ Καθαρισμός</button>
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:8px" id="auditCount"></div>
+      </div>
       <div id="auditLoading"><div class="spinner"></div></div>
       <div class="card" style="padding:8px 16px" id="auditList"></div>
     </div>
@@ -865,21 +899,61 @@ async function exportPDF(){
 }
 
 // AUDIT LOG
+function populateAuditUserFilter(){
+  const sel=document.getElementById('auditFilterUser');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Όλοι οι χρήστες</option>'+
+    allUsers.map(u=>`<option value="${u.id}" ${u.id===cur?'selected':''}>${u.name}</option>`).join('');
+}
+
+function clearAuditFilters(){
+  document.getElementById('auditFilterUser').value='';
+  document.getElementById('auditFilterAction').value='';
+  document.getElementById('auditDateFrom').value='';
+  document.getElementById('auditDateTo').value='';
+  document.getElementById('auditSort').value='desc';
+  loadAudit();
+}
+
 async function loadAudit(){
+  populateAuditUserFilter();
   document.getElementById('auditLoading').style.display='block';
   document.getElementById('auditList').innerHTML='';
-  const {data}=await sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(200);
+  document.getElementById('auditCount').textContent='';
+
+  const filterUser=document.getElementById('auditFilterUser').value;
+  const filterAction=document.getElementById('auditFilterAction').value;
+  const dateFrom=document.getElementById('auditDateFrom').value;
+  const dateTo=document.getElementById('auditDateTo').value;
+  const sortDir=document.getElementById('auditSort').value==='asc';
+
+  let q=sb.from('audit_log').select('*').order('created_at',{ascending:sortDir}).limit(500);
+  if(filterUser) q=q.eq('user_id',filterUser);
+  if(filterAction) q=q.eq('action',filterAction);
+  if(dateFrom) q=q.gte('created_at',dateFrom+'T00:00:00');
+  if(dateTo) q=q.lte('created_at',dateTo+'T23:59:59');
+
+  const {data}=await q;
   document.getElementById('auditLoading').style.display='none';
-  if(!data||!data.length){document.getElementById('auditList').innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">Δεν υπάρχουν εγγραφές ακόμα.</div>';return}
+
+  if(!data||!data.length){
+    document.getElementById('auditList').innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">Δεν υπάρχουν εγγραφές για τα επιλεγμένα φίλτρα.</div>';
+    document.getElementById('auditCount').textContent='0 εγγραφές';
+    return;
+  }
+
+  document.getElementById('auditCount').textContent=`${data.length} εγγραφές`;
+
   const actionLabel={CREATE:'Δημιουργία',UPDATE:'Επεξεργασία',DELETE:'Διαγραφή',LOGIN:'Σύνδεση',LOGOUT:'Αποσύνδεση',EXPORT:'Εξαγωγή',IMPORT:'Εισαγωγή'};
   const actionColor={CREATE:'#3b6d11',UPDATE:'#185FA5',DELETE:'#a32d2d',LOGIN:'#0F6E56',LOGOUT:'#888',EXPORT:'#854F0B',IMPORT:'#3C3489'};
+
   document.getElementById('auditList').innerHTML=data.map(r=>{
     const user=allUsers.find(u=>u.id===r.user_id);
     const dt=new Date(r.created_at).toLocaleString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const col=actionColor[r.action]||'#888';
     return `<div class="audit-row">
       <div class="audit-time">${dt}</div>
-      <div style="flex:1">
+      <div style="flex:1;min-width:0">
         <span style="font-size:11px;font-weight:500;color:${col};background:${col}18;padding:1px 7px;border-radius:4px;margin-right:6px">${actionLabel[r.action]||r.action}</span>
         <span style="font-size:13px">${r.details||''}</span>
         ${user?`<span style="font-size:11px;color:#aaa;margin-left:6px">— ${user.name}</span>`:''}
@@ -887,6 +961,7 @@ async function loadAudit(){
     </div>`;
   }).join('');
 }
+
 async function clearAudit(){
   await sb.from('audit_log').delete().neq('id','00000000-0000-0000-0000-000000000000');
   loadAudit();
