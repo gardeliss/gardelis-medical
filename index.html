@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gardelis Medical</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#185FA5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GardelisMed">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -67,14 +72,12 @@ h3{font-size:15px;font-weight:500}
 .comment-add textarea{flex:1;min-height:56px;font-size:13px;padding:7px 10px;resize:vertical}
 .exam-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.1rem;margin-bottom:10px}
 .timeout-bar{position:fixed;bottom:0;left:0;right:0;background:#fff8e6;border-top:1px solid #f0d090;padding:10px 16px;font-size:13px;color:#854F0B;display:flex;justify-content:space-between;align-items:center;z-index:999}
-.nav-tabs{display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:16px}
-.nav-tab{padding:10px 18px;font-size:14px;cursor:pointer;border:none;background:transparent;color:#888;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px}
+.nav-tabs{display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:16px;overflow-x:auto}
+.nav-tab{padding:10px 14px;font-size:14px;cursor:pointer;border:none;background:transparent;color:#888;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap}
 .nav-tab.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:500}
-/* Toggle card/table */
-.view-toggle{display:flex;gap:0;border:1px solid #d0d0d0;border-radius:8px;overflow:hidden;margin-left:auto}
+.view-toggle{display:flex;gap:0;border:1px solid #d0d0d0;border-radius:8px;overflow:hidden}
 .view-toggle button{border:none;background:#fff;padding:6px 12px;font-size:13px;cursor:pointer;color:#888;font-family:inherit}
 .view-toggle button.active{background:#185FA5;color:#fff}
-/* Table */
 .exam-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e5e5e5}
 .exam-table th{background:#f8f8f8;padding:10px 12px;text-align:left;font-weight:500;color:#555;border-bottom:1px solid #e5e5e5;white-space:nowrap;cursor:pointer;user-select:none}
 .exam-table th:hover{background:#f0f0f0}
@@ -82,11 +85,27 @@ h3{font-size:15px;font-weight:500}
 .exam-table tr:last-child td{border-bottom:none}
 .exam-table tr:hover td{background:#fafafa}
 .table-wrapper{overflow-x:auto;margin-bottom:10px;border-radius:10px}
-/* Category manager */
 .cat-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px}
 .cat-item:last-child{border-bottom:none}
-/* Sort indicator */
 .sort-ind{font-size:10px;margin-left:4px}
+/* Calendar */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day-name{text-align:center;font-size:11px;font-weight:500;color:#888;padding:6px 0}
+.cal-day{min-height:64px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;padding:4px;cursor:pointer;transition:background .1s}
+.cal-day:hover{background:#f0f7ff}
+.cal-day.today{border-color:#185FA5;background:#f0f7ff}
+.cal-day.other-month{background:#fafafa;opacity:.5}
+.cal-day.has-exams{border-color:#185FA5}
+.cal-day-num{font-size:12px;font-weight:500;color:#333;margin-bottom:2px}
+.cal-dot{font-size:10px;padding:1px 4px;border-radius:4px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Audit log */
+.audit-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
+.audit-row:last-child{border-bottom:none}
+.audit-time{font-size:11px;color:#aaa;white-space:nowrap;min-width:110px}
+/* PWA install banner */
+.pwa-banner{background:#e6f1fb;border:1px solid #b5d4f4;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:13px;color:#185FA5}
+.pwa-banner button{margin-left:auto;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -144,9 +163,18 @@ h3{font-size:15px;font-weight:500}
       </div>
     </div>
 
+    <div id="pwaBanner" style="display:none" class="pwa-banner">
+      <span>📱 Εγκαταστήστε την εφαρμογή στο κινητό σας για γρήγορη πρόσβαση!</span>
+      <button class="btn btn-sm btn-primary" onclick="installPWA()">Εγκατάσταση</button>
+      <button class="btn btn-sm" onclick="document.getElementById('pwaBanner').style.display='none'">✕</button>
+    </div>
+
     <div class="nav-tabs">
       <button class="nav-tab active" id="navDash" onclick="switchNav('dash')">Dashboard</button>
       <button class="nav-tab" id="navExams" onclick="switchNav('exams')">Εξετάσεις</button>
+      <button class="nav-tab" id="navCal" onclick="switchNav('cal')">Ημερολόγιο</button>
+      <button class="nav-tab" id="navAudit" onclick="switchNav('audit')" style="display:none">Ιστορικό</button>
+      <button class="nav-tab" id="navBackup" onclick="switchNav('backup')" style="display:none">Backup</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -159,21 +187,19 @@ h3{font-size:15px;font-weight:500}
       </div>
     </div>
 
-    <!-- EXAMS VIEW -->
+    <!-- EXAMS -->
     <div id="examsView" style="display:none">
       <div id="readonlyBanner" class="alert alert-warning" style="display:none">Λειτουργία μόνο ανάγνωσης.</div>
-
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <div class="tabs" id="memberTabs" style="flex:1;min-width:200px"></div>
         <button class="btn btn-primary btn-sm" id="addBtn" onclick="showAdd()" style="display:none;white-space:nowrap">+ Νέα</button>
         <div class="view-toggle">
-          <button id="toggleCard" class="active" onclick="setView('card')" title="Card view">&#9783;</button>
-          <button id="toggleTable" onclick="setView('table')" title="Table view">&#9776;</button>
+          <button id="toggleCard" class="active" onclick="setView('card')" title="Cards">&#9783;</button>
+          <button id="toggleTable" onclick="setView('table')" title="Table">&#9776;</button>
         </div>
       </div>
-
       <div class="search-bar">
-        <input type="text" id="searchBox" placeholder="Αναζήτηση εξέτασης, γιατρού, σημειώσεων..." oninput="renderExams()">
+        <input type="text" id="searchBox" placeholder="Αναζήτηση..." oninput="renderExams()">
         <button class="btn btn-sm" onclick="document.getElementById('searchBox').value='';renderExams()">✕</button>
       </div>
       <div class="filters-row">
@@ -184,11 +210,9 @@ h3{font-size:15px;font-weight:500}
         </select>
       </div>
       <div class="date-row">
-        <div><label>Από ημερομηνία</label><input type="date" id="filterDateFrom" onchange="renderExams()"></div>
-        <div><label>Έως ημερομηνία</label><input type="date" id="filterDateTo" onchange="renderExams()"></div>
-        <div style="display:flex;align-items:flex-end">
-          <button class="btn btn-sm" onclick="clearDateFilters()">✕ Καθαρισμός</button>
-        </div>
+        <div><label>Από</label><input type="date" id="filterDateFrom" onchange="renderExams()"></div>
+        <div><label>Έως</label><input type="date" id="filterDateTo" onchange="renderExams()"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-sm" onclick="clearDateFilters()">✕</button></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
         <select id="sortBy" style="flex:1;font-size:13px;padding:6px 10px" onchange="renderExams()">
@@ -199,11 +223,50 @@ h3{font-size:15px;font-weight:500}
         </select>
         <button class="btn btn-sm btn-success" onclick="exportPDF()">Export PDF</button>
       </div>
-
       <div id="examList"></div>
       <div id="examLoading" style="display:none"><div class="spinner"></div></div>
       <div id="emptyMsg" style="text-align:center;padding:2rem;color:#888;font-size:14px;display:none">Δεν υπάρχουν εξετάσεις.</div>
     </div>
+
+    <!-- CALENDAR -->
+    <div id="calView" style="display:none">
+      <div class="cal-header">
+        <button class="btn btn-sm" onclick="calPrev()">&#8592;</button>
+        <div style="font-weight:500;font-size:16px" id="calTitle"></div>
+        <button class="btn btn-sm" onclick="calNext()">&#8594;</button>
+      </div>
+      <div class="cal-grid" id="calDayNames"></div>
+      <div class="cal-grid" style="margin-top:4px" id="calGrid"></div>
+      <div id="calDetail" style="margin-top:16px"></div>
+    </div>
+
+    <!-- AUDIT LOG -->
+    <div id="auditView" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2>Ιστορικό αλλαγών</h2>
+        <button class="btn btn-sm btn-danger" onclick="if(confirm('Εκκαθάριση ιστορικού;'))clearAudit()">Εκκαθάριση</button>
+      </div>
+      <div id="auditLoading"><div class="spinner"></div></div>
+      <div class="card" style="padding:8px 16px" id="auditList"></div>
+    </div>
+
+    <!-- BACKUP -->
+    <div id="backupView" style="display:none">
+      <h2 style="margin-bottom:16px">Backup & Επαναφορά</h2>
+      <div class="card">
+        <h3 style="margin-bottom:8px">Εξαγωγή δεδομένων</h3>
+        <div style="font-size:13px;color:#666;margin-bottom:12px">Κατεβάστε όλα τα δεδομένα της εφαρμογής σε αρχείο JSON. Κρατήστε το σε ασφαλές μέρος.</div>
+        <button class="btn btn-primary" onclick="exportBackup()">Εξαγωγή JSON Backup</button>
+      </div>
+      <div class="card" style="margin-top:0">
+        <h3 style="margin-bottom:8px">Επαναφορά δεδομένων</h3>
+        <div class="alert alert-warning" style="margin-bottom:12px">Προσοχή: Η επαναφορά θα προσθέσει τα δεδομένα του αρχείου. Δεν διαγράφει τα υπάρχοντα.</div>
+        <div class="upload-area" onclick="document.getElementById('backupInput').click()">Επιλέξτε αρχείο JSON backup...</div>
+        <input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(event)">
+        <div id="importStatus" style="margin-top:10px"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -213,7 +276,7 @@ h3{font-size:15px;font-weight:500}
     <div class="topbar"><h2 id="addTitle">Νέα Εξέταση</h2><button class="btn btn-sm" onclick="showMain()">✕</button></div>
     <div class="card">
       <div class="field"><label>Για ποιον;</label><select id="examOwner"></select></div>
-      <div class="field"><label>Τύπος εξέτασης *</label><input type="text" id="examName" placeholder="π.χ. Αιματολογικές, Ακτινογραφία..."></div>
+      <div class="field"><label>Τύπος εξέτασης *</label><input type="text" id="examName" placeholder="π.χ. Αιματολογικές..."></div>
       <div class="field"><label>Κατηγορία</label><select id="examCat"></select></div>
       <div class="field"><label>Ημερομηνία</label><input type="date" id="examDate"></div>
       <div class="field"><label>Αποτέλεσμα</label>
@@ -259,23 +322,19 @@ h3{font-size:15px;font-weight:500}
 <div id="adminScreen" class="screen">
   <div class="container">
     <div class="topbar"><h2>Πίνακας Admin</h2><button class="btn btn-sm" onclick="showMain()">✕</button></div>
-
-    <!-- Users list -->
     <div id="adminUserList"></div>
-
-    <!-- Add/Edit user -->
     <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
       <h3 style="margin-bottom:12px" id="userFormTitle">Προσθήκη χρήστη</h3>
       <div class="card">
         <input type="hidden" id="editUserId">
         <div class="field"><label>Όνομα *</label><input type="text" id="editUserName"></div>
-        <div class="field"><label>Username * (για login)</label><input type="text" id="editUserUsername" autocomplete="off"></div>
+        <div class="field"><label>Username *</label><input type="text" id="editUserUsername" autocomplete="off"></div>
         <div class="field"><label>Αρχικά (2 γράμματα)</label><input type="text" id="editUserInitials" maxlength="2"></div>
         <div class="field"><label>Ρόλος / Σχέση</label><input type="text" id="editUserRole" placeholder="π.χ. Πατέρας"></div>
         <div class="field"><label>Δικαιώματα</label>
           <select id="editUserPerm">
             <option value="rw">Admin (Read & Write για όλους)</option>
-            <option value="rw_limited">Editor (Read & Write για τους χρήστες που βλέπει)</option>
+            <option value="rw_limited">Editor (Read & Write για χρήστες που βλέπει)</option>
             <option value="r">Viewer (Read only)</option>
           </select>
         </div>
@@ -287,8 +346,6 @@ h3{font-size:15px;font-weight:500}
         </div>
       </div>
     </div>
-
-    <!-- Visibility -->
     <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
       <h3 style="margin-bottom:4px">Ορατότητα χρηστών</h3>
       <div style="font-size:12px;color:#888;margin-bottom:12px">Ποιος βλέπει τις εξετάσεις ποιων άλλων.</div>
@@ -297,8 +354,6 @@ h3{font-size:15px;font-weight:500}
       <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveVisibility()">Αποθήκευση ορατότητας</button>
       <div id="visOk" class="alert alert-success" style="display:none;margin-top:8px">Αποθηκεύτηκε!</div>
     </div>
-
-    <!-- Category manager (admin only) -->
     <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
       <h3 style="margin-bottom:4px">Κατηγορίες Εξετάσεων</h3>
       <div style="font-size:12px;color:#888;margin-bottom:12px">Προσθήκη ή διαγραφή κατηγοριών.</div>
@@ -310,11 +365,9 @@ h3{font-size:15px;font-weight:500}
       <div id="catErr" class="alert alert-danger" style="display:none;margin-top:8px"></div>
       <div id="catOk" class="alert alert-success" style="display:none;margin-top:8px">Αποθηκεύτηκε!</div>
     </div>
-
   </div>
 </div>
 
-<!-- TIMEOUT BAR -->
 <div id="timeoutBar" class="timeout-bar" style="display:none">
   <span id="timeoutMsg"></span>
   <button class="btn btn-sm" onclick="resetTimeout()">Παραμονή</button>
@@ -324,79 +377,76 @@ h3{font-size:15px;font-weight:500}
 const SUPABASE_URL='https://hhaqhdzuevyualtgkpkp.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoYXFoZHp1ZXZ5dWFsdGdrcGtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDkzMTQsImV4cCI6MjA5MTIyNTMxNH0.n5HlgLXfHaU59TS1OGUNS7c-glqyVjV7zqMR9UhnfE4';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
 const SESSION_KEY='gm_session';
-const TIMEOUT_MIN=15, WARN_MIN=2;
-const COLORS=[
-  {bg:'#E6F1FB',color:'#185FA5'},{bg:'#E1F5EE',color:'#0F6E56'},
-  {bg:'#FAEEDA',color:'#854F0B'},{bg:'#EEEDFE',color:'#3C3489'},
-  {bg:'#FAECE7',color:'#993C1D'},{bg:'#FBEAF0',color:'#993556'}
-];
+const TIMEOUT_MIN=15,WARN_MIN=2;
+const COLORS=[{bg:'#E6F1FB',color:'#185FA5'},{bg:'#E1F5EE',color:'#0F6E56'},{bg:'#FAEEDA',color:'#854F0B'},{bg:'#EEEDFE',color:'#3C3489'},{bg:'#FAECE7',color:'#993C1D'},{bg:'#FBEAF0',color:'#993556'}];
 const rsStyle={'Κανονικό':{bg:'#EAF3DE',color:'#3B6D11'},'Παθολογικό':{bg:'#FCEBEB',color:'#A32D2D'},'Εκκρεμεί':{bg:'#FAEEDA',color:'#854F0B'}};
 const dateTagStyle={bg:'#E6F1FB',color:'#185FA5'};
+const DAY_NAMES=['Κυρ','Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ'];
+const MONTH_NAMES=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
 
 let currentUser=null,allUsers=[],visibleUserIds=[],allCategories=[];
 let activeTab='all',editingExamId=null,pendingFiles=[];
 let timeoutTimer=null,warnTimer=null,currentNav='dash',currentView='card';
 let tableSortCol='exam_date',tableSortDir='desc';
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let deferredInstall=null;
 
-// ── SESSION ───────────────────────────────────────────────
-function saveSession(u,remember){
-  const d={userId:u.id,remember,ts:Date.now()};
-  localStorage.setItem(SESSION_KEY,JSON.stringify(d));
-  sessionStorage.setItem(SESSION_KEY,JSON.stringify(d));
-}
+// PWA install prompt
+window.addEventListener('beforeinstallprompt',e=>{deferredInstall=e;document.getElementById('pwaBanner').style.display='flex'});
+async function installPWA(){if(deferredInstall){deferredInstall.prompt();const r=await deferredInstall.userChoice;if(r.outcome==='accepted')document.getElementById('pwaBanner').style.display='none';deferredInstall=null;}}
+
+// Service Worker
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/gardelis-medical/sw.js').catch(()=>{}))}
+
+// SESSION
+function saveSession(u,r){const d={userId:u.id,remember:r,ts:Date.now()};localStorage.setItem(SESSION_KEY,JSON.stringify(d));sessionStorage.setItem(SESSION_KEY,JSON.stringify(d))}
 function clearSession(){localStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(SESSION_KEY)}
-function loadSession(){
-  let r=sessionStorage.getItem(SESSION_KEY)||localStorage.getItem(SESSION_KEY);
-  try{return r?JSON.parse(r):null}catch{return null}
-}
+function loadSession(){let r=sessionStorage.getItem(SESSION_KEY)||localStorage.getItem(SESSION_KEY);try{return r?JSON.parse(r):null}catch{return null}}
 
-// ── TIMEOUT ───────────────────────────────────────────────
+// TIMEOUT
 function resetTimeout(){
   document.getElementById('timeoutBar').style.display='none';
   clearTimeout(timeoutTimer);clearTimeout(warnTimer);
   if(!currentUser)return;
-  const s=loadSession();
-  if(s&&s.remember)return;
+  const s=loadSession();if(s&&s.remember)return;
   warnTimer=setTimeout(showTimeoutWarning,(TIMEOUT_MIN-WARN_MIN)*60000);
   timeoutTimer=setTimeout(()=>logout(true),TIMEOUT_MIN*60000);
 }
 function showTimeoutWarning(){
   let secs=WARN_MIN*60;
   document.getElementById('timeoutBar').style.display='flex';
-  document.getElementById('timeoutMsg').textContent=`Αυτόματη αποσύνδεση σε ${secs}s λόγω αδράνειας.`;
-  const iv=setInterval(()=>{
-    secs--;
-    document.getElementById('timeoutMsg').textContent=`Αυτόματη αποσύνδεση σε ${secs}s λόγω αδράνειας.`;
-    if(secs<=0)clearInterval(iv);
-  },1000);
+  document.getElementById('timeoutMsg').textContent=`Αποσύνδεση σε ${secs}s λόγω αδράνειας.`;
+  const iv=setInterval(()=>{secs--;document.getElementById('timeoutMsg').textContent=`Αποσύνδεση σε ${secs}s λόγω αδράνειας.`;if(secs<=0)clearInterval(iv)},1000);
 }
 ['click','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,()=>{if(currentUser)resetTimeout()},{passive:true}));
 
-// ── UTILS ─────────────────────────────────────────────────
+// UTILS
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
 function canWrite(){return currentUser&&(currentUser.perm==='rw'||currentUser.perm==='rw_limited')}
 function isAdmin(){return currentUser&&currentUser.perm==='rw'}
+function getCatStyle(cat){const m={'Αιματολογικές':{bg:'#E6F1FB',color:'#185FA5'},'Απεικονιστικές':{bg:'#EEEDFE',color:'#3C3489'},'Καρδιολογικές':{bg:'#FAECE7',color:'#993C1D'},'Άλλο':{bg:'#f0f0f0',color:'#555'}};return m[cat]||{bg:'#E1F5EE',color:'#0F6E56'}}
 
-// ── INIT ──────────────────────────────────────────────────
+// AUDIT
+async function logAudit(action,entity,entityId,details){
+  if(!currentUser)return;
+  await sb.from('audit_log').insert({user_id:currentUser.id,action,entity,entity_id:entityId,details});
+}
+
+// INIT
 async function init(){
   show('loadingScreen');
   const [{data:users},{data:cats}]=await Promise.all([
     sb.from('users').select('*').order('created_at'),
     sb.from('exam_categories').select('*').order('name')
   ]);
-  allUsers=users||[];
-  allCategories=cats||[];
+  allUsers=users||[];allCategories=cats||[];
   const session=loadSession();
-  if(session){
-    const u=allUsers.find(u=>u.id===session.userId);
-    if(u){currentUser=u;await loadVisibleUsers();setupMain();show('mainScreen');resetTimeout();return}
-  }
+  if(session){const u=allUsers.find(u=>u.id===session.userId);if(u){currentUser=u;await loadVisibleUsers();setupMain();show('mainScreen');resetTimeout();return}}
   show('loginScreen');
 }
 
-// ── LOGIN ─────────────────────────────────────────────────
+// LOGIN
 async function doLogin(){
   const username=document.getElementById('loginUsername').value.trim().toLowerCase();
   const password=document.getElementById('loginPassword').value;
@@ -405,9 +455,9 @@ async function doLogin(){
   if(!username||!password){document.getElementById('loginError').style.display='block';return}
   const user=allUsers.find(u=>u.username&&u.username.toLowerCase()===username);
   if(!user||user.pin!==password){document.getElementById('loginError').style.display='block';return}
-  currentUser=user;
-  saveSession(user,remember);
+  currentUser=user;saveSession(user,remember);
   await loadVisibleUsers();
+  await logAudit('LOGIN','session',user.id,`${user.name} συνδέθηκε`);
   setupMain();show('mainScreen');resetTimeout();
 }
 
@@ -422,48 +472,46 @@ function setupMain(){
   const av=document.getElementById('mainAvatar');
   av.textContent=u.initials;av.style.background=u.bg;av.style.color=u.color;
   document.getElementById('mainName').textContent=u.name;
-  const roleLabel={rw:'Admin — Read & Write',rw_limited:'Editor — Read & Write (περιορισμένο)',r:'Viewer — Read only'};
-  document.getElementById('mainRoleLabel').textContent=roleLabel[u.perm]||u.perm;
+  const rl={rw:'Admin — Read & Write',rw_limited:'Editor — Read & Write (περιορισμένο)',r:'Viewer — Read only'};
+  document.getElementById('mainRoleLabel').textContent=rl[u.perm]||u.perm;
   document.getElementById('addBtn').style.display=canWrite()?'':'none';
   document.getElementById('adminBtn').style.display=isAdmin()?'':'none';
   document.getElementById('readonlyBanner').style.display=u.perm==='r'?'block':'none';
-  buildTabs();
-  populateCatFilter();
-  switchNav('dash');
-  populateOwnerSelect();
+  document.getElementById('navAudit').style.display=isAdmin()?'':'none';
+  document.getElementById('navBackup').style.display=isAdmin()?'':'none';
+  buildTabs();populateCatFilter();switchNav('dash');populateOwnerSelect();
 }
 
 function logout(auto=false){
+  if(currentUser)logAudit('LOGOUT','session',currentUser.id,`${currentUser.name} αποσυνδέθηκε`);
   clearSession();clearTimeout(timeoutTimer);clearTimeout(warnTimer);
   document.getElementById('timeoutBar').style.display='none';
   currentUser=null;visibleUserIds=[];
-  document.getElementById('loginUsername').value='';
-  document.getElementById('loginPassword').value='';
+  document.getElementById('loginUsername').value='';document.getElementById('loginPassword').value='';
   document.getElementById('loginError').style.display=auto?'block':'none';
   if(auto)document.getElementById('loginError').textContent='Αποσυνδεθήκατε αυτόματα λόγω αδράνειας.';
   show('loginScreen');
 }
 
-// ── NAV ───────────────────────────────────────────────────
+// NAV
 function switchNav(nav){
   currentNav=nav;
-  document.getElementById('navDash').classList.toggle('active',nav==='dash');
-  document.getElementById('navExams').classList.toggle('active',nav==='exams');
-  document.getElementById('dashView').style.display=nav==='dash'?'block':'none';
-  document.getElementById('examsView').style.display=nav==='exams'?'block':'none';
+  ['dash','exams','cal','audit','backup'].forEach(n=>{
+    const btn=document.getElementById('nav'+n.charAt(0).toUpperCase()+n.slice(1));
+    if(btn)btn.classList.toggle('active',n===nav);
+    const view=document.getElementById(n+'View');
+    if(view)view.style.display=n===nav?'block':'none';
+  });
   if(nav==='dash')loadDashboard();
   if(nav==='exams')renderExams();
+  if(nav==='cal')renderCalendar();
+  if(nav==='audit')loadAudit();
 }
 
-// ── VIEW TOGGLE ───────────────────────────────────────────
-function setView(v){
-  currentView=v;
-  document.getElementById('toggleCard').classList.toggle('active',v==='card');
-  document.getElementById('toggleTable').classList.toggle('active',v==='table');
-  renderExams();
-}
+// VIEW TOGGLE
+function setView(v){currentView=v;document.getElementById('toggleCard').classList.toggle('active',v==='card');document.getElementById('toggleTable').classList.toggle('active',v==='table');renderExams()}
 
-// ── DASHBOARD ─────────────────────────────────────────────
+// DASHBOARD
 async function loadDashboard(){
   document.getElementById('dashLoading').style.display='block';
   document.getElementById('dashContent').style.display='none';
@@ -481,20 +529,20 @@ async function loadDashboard(){
     <div class="stat-card"><div class="stat-num" style="color:#854F0B">${pending}</div><div class="stat-label">Εκκρεμείς</div></div>`;
   const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
   document.getElementById('memberStats').innerHTML=visUsers.map(u=>{
-    const ue=(exams||[]).filter(e=>e.owner_id===u.id);
-    const last=ue.sort((a,b)=>new Date(b.exam_date)-new Date(a.exam_date))[0];
+    const ue=(exams||[]).filter(e=>e.owner_id===u.id).sort((a,b)=>new Date(b.exam_date)-new Date(a.exam_date));
+    const last=ue[0];
     return `<div class="member-stat">
       <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${u.bg};color:${u.color}">${u.initials}</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:500">${u.name}</div>
-        <div style="font-size:12px;color:#888">${ue.length} εξετάσεις · Τελευταία: ${last?last.name+' ('+new Date(last.exam_date).toLocaleDateString('el-GR')+')':'—'}</div>
+        <div style="font-size:12px;color:#888">${ue.length} εξετάσεις · ${last?'Τελευταία: '+last.name+' ('+new Date(last.exam_date).toLocaleDateString('el-GR')+')':'Καμία εξέταση'}</div>
       </div>
       <button class="btn btn-sm" onclick="switchNav('exams');switchTab('${u.id}')">Προβολή</button>
     </div>`;
   }).join('');
 }
 
-// ── TABS ──────────────────────────────────────────────────
+// TABS
 function buildTabs(){
   const visUsers=allUsers.filter(u=>visibleUserIds.includes(u.id));
   document.getElementById('memberTabs').innerHTML=
@@ -507,26 +555,17 @@ function switchTab(t){
   allUsers.forEach(u=>{const el=document.getElementById('tab_'+u.id);if(el)el.classList.toggle('active',t===u.id)});
   renderExams();
 }
-function clearDateFilters(){
-  document.getElementById('filterDateFrom').value='';
-  document.getElementById('filterDateTo').value='';
-  renderExams();
-}
-
-// ── CATEGORY FILTER ───────────────────────────────────────
+function clearDateFilters(){document.getElementById('filterDateFrom').value='';document.getElementById('filterDateTo').value='';renderExams()}
 function populateCatFilter(){
-  const sel=document.getElementById('filterCat');
-  const val=sel.value;
-  sel.innerHTML='<option value="">Όλες κατηγορίες</option>'+
-    allCategories.map(c=>`<option value="${c.name}" ${c.name===val?'selected':''}>${c.name}</option>`).join('');
+  const sel=document.getElementById('filterCat'),val=sel.value;
+  sel.innerHTML='<option value="">Όλες κατηγορίες</option>'+allCategories.map(c=>`<option value="${c.name}" ${c.name===val?'selected':''}>${c.name}</option>`).join('');
 }
 function populateExamCatSelect(){
-  const sel=document.getElementById('examCat');
-  const val=sel.value;
+  const sel=document.getElementById('examCat'),val=sel.value;
   sel.innerHTML=allCategories.map(c=>`<option value="${c.name}" ${c.name===val?'selected':''}>${c.name}</option>`).join('');
 }
 
-// ── FETCH & SORT EXAMS ────────────────────────────────────
+// FETCH EXAMS
 async function fetchExams(){
   let ownerIds=activeTab==='all'?visibleUserIds:[activeTab];
   let q=sb.from('exams').select('*').in('owner_id',ownerIds);
@@ -534,10 +573,8 @@ async function fetchExams(){
   const res=document.getElementById('filterRes').value;
   const df=document.getElementById('filterDateFrom').value;
   const dt=document.getElementById('filterDateTo').value;
-  if(cat)q=q.eq('category',cat);
-  if(res)q=q.eq('result',res);
-  if(df)q=q.gte('exam_date',df);
-  if(dt)q=q.lte('exam_date',dt);
+  if(cat)q=q.eq('category',cat);if(res)q=q.eq('result',res);
+  if(df)q=q.gte('exam_date',df);if(dt)q=q.lte('exam_date',dt);
   const {data}=await q;
   let exams=data||[];
   const search=document.getElementById('searchBox').value.trim().toLowerCase();
@@ -560,11 +597,10 @@ async function renderExams(){
   const exams=await fetchExams();
   document.getElementById('examLoading').style.display='none';
   if(!exams.length){document.getElementById('emptyMsg').style.display='block';return}
-  if(currentView==='table')renderTableView(exams);
-  else renderCardView(exams);
+  if(currentView==='table')renderTableView(exams);else renderCardView(exams);
 }
 
-// ── CARD VIEW ─────────────────────────────────────────────
+// CARD VIEW
 function renderCardView(exams){
   const w=canWrite();
   document.getElementById('examList').innerHTML=exams.map(e=>{
@@ -575,10 +611,7 @@ function renderCardView(exams){
     return `<div class="exam-card" id="ec_${e.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1">
-          ${owner?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-            <div class="avatar" style="width:20px;height:20px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div>
-            <span style="font-size:12px;color:#888">${owner.name}</span>
-          </div>`:''}
+          ${owner?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><div class="avatar" style="width:20px;height:20px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div><span style="font-size:12px;color:#888">${owner.name}</span></div>`:''}
           <div style="font-weight:500;font-size:15px;margin-bottom:5px">${e.name}</div>
           ${dateStr?`<span class="tag" style="background:${dateTagStyle.bg};color:${dateTagStyle.color};margin-bottom:5px;display:inline-block">${dateStr}</span><br>`:''}
           <div style="margin-top:4px;margin-bottom:5px">
@@ -597,94 +630,106 @@ function renderCardView(exams){
             </div>
           </div>
         </div>
-        ${w?`<div style="display:flex;gap:5px;flex-shrink:0">
-          <button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button>
-          <button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή;'))delExam('${e.id}')">Διαγ.</button>
-        </div>`:''}
+        ${w?`<div style="display:flex;gap:5px;flex-shrink:0"><button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button><button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή;'))delExam('${e.id}')">Διαγ.</button></div>`:''}
       </div>
     </div>`;
   }).join('');
   exams.forEach(e=>{loadFiles(e.id);loadComments(e.id)});
 }
 
-// ── TABLE VIEW ────────────────────────────────────────────
+// TABLE VIEW
 function renderTableView(exams){
   const w=canWrite();
-  const cols=[
-    {key:'member',label:'Μέλος'},
-    {key:'name',label:'Όνομα'},
-    {key:'category',label:'Κατηγορία'},
-    {key:'result',label:'Αποτέλεσμα'},
-    {key:'exam_date',label:'Ημερομηνία'},
-    {key:'doctor',label:'Γιατρός'},
-    {key:'notes',label:'Σημειώσεις'},
-  ];
-  const sortInd=(key)=>{
-    if(tableSortCol!==key)return '<span class="sort-ind">⇅</span>';
-    return `<span class="sort-ind">${tableSortDir==='asc'?'↑':'↓'}</span>`;
-  };
-  // sort for table
+  const cols=[{key:'member',label:'Μέλος'},{key:'name',label:'Όνομα'},{key:'category',label:'Κατηγορία'},{key:'result',label:'Αποτέλεσμα'},{key:'exam_date',label:'Ημερομηνία'},{key:'doctor',label:'Γιατρός'},{key:'notes',label:'Σημειώσεις'}];
+  const si=(k)=>tableSortCol!==k?'<span class="sort-ind">⇅</span>':`<span class="sort-ind">${tableSortDir==='asc'?'↑':'↓'}</span>`;
   const sorted=[...exams].sort((a,b)=>{
     let av,bv;
     if(tableSortCol==='member'){av=(allUsers.find(u=>u.id===a.owner_id)||{}).name||'';bv=(allUsers.find(u=>u.id===b.owner_id)||{}).name||'';}
     else{av=a[tableSortCol]||'';bv=b[tableSortCol]||'';}
-    if(tableSortCol==='exam_date'){av=new Date(av||0);bv=new Date(bv||0);return tableSortDir==='asc'?av-bv:bv-av;}
-    return tableSortDir==='asc'?(av).localeCompare(bv,'el'):(bv).localeCompare(av,'el');
+    if(tableSortCol==='exam_date')return tableSortDir==='asc'?new Date(av||0)-new Date(bv||0):new Date(bv||0)-new Date(av||0);
+    return tableSortDir==='asc'?(av+'').localeCompare(bv+'','el'):(bv+'').localeCompare(av+'','el');
   });
   document.getElementById('examList').innerHTML=`<div class="table-wrapper"><table class="exam-table">
-    <thead><tr>
-      ${cols.map(c=>`<th onclick="tableSort('${c.key}')">${c.label}${sortInd(c.key)}</th>`).join('')}
-      ${w?'<th>Ενέργειες</th>':''}
-    </tr></thead>
-    <tbody>
-    ${sorted.map(e=>{
+    <thead><tr>${cols.map(c=>`<th onclick="tableSort('${c.key}')">${c.label}${si(c.key)}</th>`).join('')}${w?'<th>Ενέργειες</th>':''}</tr></thead>
+    <tbody>${sorted.map(e=>{
       const owner=allUsers.find(u=>u.id===e.owner_id);
       const rs=rsStyle[e.result]||rsStyle['Εκκρεμεί'];
       const cs=getCatStyle(e.category);
       const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR'):'—';
-      const notes=e.notes?e.notes.substring(0,60)+(e.notes.length>60?'…':''):'—';
       return `<tr>
-        <td>${owner?`<div style="display:flex;align-items:center;gap:6px"><div class="avatar" style="width:22px;height:22px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div>${owner.name}</div>`:'—'}</td>
+        <td>${owner?`<div style="display:flex;align-items:center;gap:6px"><div class="avatar" style="width:20px;height:20px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div>${owner.name}</div>`:'—'}</td>
         <td style="font-weight:500">${e.name||'—'}</td>
         <td><span class="tag" style="background:${cs.bg};color:${cs.color}">${e.category||'—'}</span></td>
         <td><span class="tag" style="background:${rs.bg};color:${rs.color}">${e.result||'—'}</span></td>
         <td><span class="tag" style="background:${dateTagStyle.bg};color:${dateTagStyle.color}">${dateStr}</span></td>
         <td>${e.doctor||'—'}</td>
-        <td style="max-width:180px;color:#666">${notes}</td>
-        ${w?`<td><div style="display:flex;gap:4px">
-          <button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button>
-          <button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή;'))delExam('${e.id}')">Διαγ.</button>
-        </div></td>`:''}
+        <td style="max-width:160px;color:#666">${(e.notes||'').substring(0,60)+(e.notes&&e.notes.length>60?'…':'')}</td>
+        ${w?`<td><div style="display:flex;gap:4px"><button class="btn btn-sm" onclick="editExam('${e.id}')">Επεξ.</button><button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή;'))delExam('${e.id}')">Διαγ.</button></div></td>`:''}
       </tr>`;
-    }).join('')}
-    </tbody>
-  </table></div>`;
+    }).join('')}</tbody></table></div>`;
+}
+function tableSort(col){if(tableSortCol===col)tableSortDir=tableSortDir==='asc'?'desc':'asc';else{tableSortCol=col;tableSortDir='asc';}renderExams()}
+
+// CALENDAR
+async function renderCalendar(){
+  document.getElementById('calTitle').textContent=MONTH_NAMES[calMonth]+' '+calYear;
+  document.getElementById('calDayNames').innerHTML=DAY_NAMES.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  const {data:exams}=await sb.from('exams').select('id,name,exam_date,result,owner_id').in('owner_id',visibleUserIds);
+  const examsByDate={};
+  (exams||[]).forEach(e=>{if(e.exam_date){const k=e.exam_date.substring(0,10);if(!examsByDate[k])examsByDate[k]=[];examsByDate[k].push(e)}});
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+  const today=new Date();
+  let cells='';
+  for(let i=0;i<firstDay;i++){
+    const d=daysInPrev-firstDay+1+i;
+    cells+=`<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayExams=examsByDate[dateStr]||[];
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const hasExams=dayExams.length>0;
+    cells+=`<div class="cal-day${isToday?' today':''}${hasExams?' has-exams':''}" onclick="showCalDay('${dateStr}')">
+      <div class="cal-day-num">${d}</div>
+      ${dayExams.slice(0,2).map(e=>{const rs=rsStyle[e.result]||rsStyle['Εκκρεμεί'];return`<div class="cal-dot" style="background:${rs.bg};color:${rs.color}">${e.name}</div>`}).join('')}
+      ${dayExams.length>2?`<div style="font-size:10px;color:#888">+${dayExams.length-2} ακόμα</div>`:''}
+    </div>`;
+  }
+  const remaining=(7-((firstDay+daysInMonth)%7))%7;
+  for(let d=1;d<=remaining;d++)cells+=`<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  document.getElementById('calGrid').innerHTML=cells;
+  document.getElementById('calDetail').innerHTML='';
+}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar()}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar()}
+async function showCalDay(dateStr){
+  const {data:exams}=await sb.from('exams').select('*').eq('exam_date',dateStr).in('owner_id',visibleUserIds);
+  const dt=new Date(dateStr).toLocaleDateString('el-GR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if(!exams||!exams.length){document.getElementById('calDetail').innerHTML=`<div class="card"><div style="color:#888;font-size:13px">${dt}: Δεν υπάρχουν εξετάσεις.</div></div>`;return}
+  document.getElementById('calDetail').innerHTML=`<h3 style="margin-bottom:10px">${dt}</h3>`+exams.map(e=>{
+    const owner=allUsers.find(u=>u.id===e.owner_id);
+    const rs=rsStyle[e.result]||rsStyle['Εκκρεμεί'];
+    const cs=getCatStyle(e.category);
+    return `<div class="card" style="padding:12px 14px">
+      ${owner?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><div class="avatar" style="width:20px;height:20px;font-size:9px;background:${owner.bg};color:${owner.color}">${owner.initials}</div><span style="font-size:12px;color:#888">${owner.name}</span></div>`:''}
+      <div style="font-weight:500;font-size:14px;margin-bottom:5px">${e.name}</div>
+      <span class="tag" style="background:${cs.bg};color:${cs.color}">${e.category||''}</span>
+      <span class="tag" style="background:${rs.bg};color:${rs.color}">${e.result||''}</span>
+      ${e.doctor?`<div style="font-size:12px;color:#888;margin-top:4px">${e.doctor}</div>`:''}
+      ${e.notes?`<div style="font-size:13px;color:#555;margin-top:6px">${e.notes}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
-function tableSort(col){
-  if(tableSortCol===col)tableSortDir=tableSortDir==='asc'?'desc':'asc';
-  else{tableSortCol=col;tableSortDir='asc';}
-  renderExams();
-}
-
-function getCatStyle(cat){
-  const map={
-    'Αιματολογικές':{bg:'#E6F1FB',color:'#185FA5'},
-    'Απεικονιστικές':{bg:'#EEEDFE',color:'#3C3489'},
-    'Καρδιολογικές':{bg:'#FAECE7',color:'#993C1D'},
-    'Άλλο':{bg:'#f0f0f0',color:'#555'}
-  };
-  return map[cat]||{bg:'#E1F5EE',color:'#0F6E56'};
-}
-
-// ── FILES ─────────────────────────────────────────────────
+// FILES
 async function loadFiles(examId){
   const {data}=await sb.from('files').select('*').eq('exam_id',examId);
   const el=document.getElementById('files_'+examId);if(!el)return;
   if(!data||!data.length){el.innerHTML='';return}
   const w=canWrite();
-  el.innerHTML=data.map(f=>`<div class="pdf-item">
-    <div class="pdf-icon">PDF</div>
+  el.innerHTML=data.map(f=>`<div class="pdf-item"><div class="pdf-icon">PDF</div>
     <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
     ${w?`<button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${examId}')">✕</button>`:''}
   </div>`).join('');
@@ -693,10 +738,11 @@ async function delFile(fid,path,examId){
   if(!confirm('Διαγραφή αρχείου;'))return;
   await sb.storage.from('medical-files').remove([path]);
   await sb.from('files').delete().eq('id',fid);
+  await logAudit('DELETE','file',fid,`Διαγραφή αρχείου: ${path}`);
   loadFiles(examId);
 }
 
-// ── COMMENTS ──────────────────────────────────────────────
+// COMMENTS
 async function loadComments(examId){
   const {data}=await sb.from('exam_comments').select('*').eq('exam_id',examId).order('created_at');
   const el=document.getElementById('comments_'+examId);if(!el)return;
@@ -706,27 +752,25 @@ async function loadComments(examId){
     const dt=new Date(c.created_at).toLocaleString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const canDel=currentUser&&(isAdmin()||currentUser.id===c.author_id);
     return `<div class="comment-item">
-      <div class="comment-author">${author?author.name:'—'} · ${dt}
-        ${canDel?`<button class="btn btn-sm btn-danger" style="padding:1px 7px;font-size:11px;float:right" onclick="delComment('${c.id}','${examId}')">✕</button>`:''}
-      </div>
+      <div class="comment-author">${author?author.name:'—'} · ${dt}${canDel?`<button class="btn btn-sm btn-danger" style="padding:1px 7px;font-size:11px;float:right" onclick="delComment('${c.id}','${examId}')">✕</button>`:''}</div>
       <div class="comment-text">${c.comment.replace(/\n/g,'<br>')}</div>
     </div>`;
   }).join('');
 }
 async function addComment(examId){
-  const txt=document.getElementById('ctxt_'+examId).value.trim();
-  if(!txt)return;
+  const txt=document.getElementById('ctxt_'+examId).value.trim();if(!txt)return;
   await sb.from('exam_comments').insert({exam_id:examId,author_id:currentUser.id,comment:txt});
-  document.getElementById('ctxt_'+examId).value='';
-  loadComments(examId);
+  await logAudit('CREATE','comment',examId,`Σχόλιο σε εξέταση`);
+  document.getElementById('ctxt_'+examId).value='';loadComments(examId);
 }
 async function delComment(cid,examId){
   if(!confirm('Διαγραφή σχολίου;'))return;
   await sb.from('exam_comments').delete().eq('id',cid);
+  await logAudit('DELETE','comment',cid,'Διαγραφή σχολίου');
   loadComments(examId);
 }
 
-// ── ADD/EDIT ──────────────────────────────────────────────
+// ADD/EDIT EXAM
 function showAdd(){
   editingExamId=null;pendingFiles=[];
   document.getElementById('addTitle').textContent='Νέα Εξέταση';
@@ -734,36 +778,23 @@ function showAdd(){
   document.getElementById('examDate').value=new Date().toISOString().split('T')[0];
   document.getElementById('examResult').value='Κανονικό';
   document.getElementById('examOwner').value=currentUser.id;
-  document.getElementById('selectedFiles').innerHTML='';
-  document.getElementById('existingFiles').innerHTML='';
-  document.getElementById('saveError').style.display='none';
-  document.getElementById('saveLoading').style.display='none';
-  populateExamCatSelect();
-  show('addScreen');
+  document.getElementById('selectedFiles').innerHTML='';document.getElementById('existingFiles').innerHTML='';
+  document.getElementById('saveError').style.display='none';document.getElementById('saveLoading').style.display='none';
+  populateExamCatSelect();show('addScreen');
 }
 async function editExam(id){
-  const {data}=await sb.from('exams').select('*').eq('id',id).single();
-  if(!data)return;
+  const {data}=await sb.from('exams').select('*').eq('id',id).single();if(!data)return;
   editingExamId=id;pendingFiles=[];
   document.getElementById('addTitle').textContent='Επεξεργασία Εξέτασης';
-  document.getElementById('examOwner').value=data.owner_id;
-  document.getElementById('examName').value=data.name;
-  document.getElementById('examDate').value=data.exam_date||'';
-  document.getElementById('examResult').value=data.result;
-  document.getElementById('examNotes').value=data.notes||'';
-  document.getElementById('examDoctor').value=data.doctor||'';
-  document.getElementById('selectedFiles').innerHTML='';
-  document.getElementById('saveError').style.display='none';
-  document.getElementById('saveLoading').style.display='none';
-  populateExamCatSelect();
-  document.getElementById('examCat').value=data.category;
+  document.getElementById('examOwner').value=data.owner_id;document.getElementById('examName').value=data.name;
+  document.getElementById('examDate').value=data.exam_date||'';document.getElementById('examResult').value=data.result;
+  document.getElementById('examNotes').value=data.notes||'';document.getElementById('examDoctor').value=data.doctor||'';
+  document.getElementById('selectedFiles').innerHTML='';document.getElementById('saveError').style.display='none';document.getElementById('saveLoading').style.display='none';
+  populateExamCatSelect();document.getElementById('examCat').value=data.category;
   const {data:files}=await sb.from('files').select('*').eq('exam_id',id);
   document.getElementById('existingFiles').innerHTML=(files&&files.length)?
     '<div style="font-size:12px;color:#888;margin-top:8px;margin-bottom:4px">Υπάρχοντα αρχεία:</div>'+
-    files.map(f=>`<div class="pdf-item"><div class="pdf-icon">PDF</div>
-      <a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a>
-      <button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${id}');this.closest('.pdf-item').remove()">✕</button>
-    </div>`).join(''):'';
+    files.map(f=>`<div class="pdf-item"><div class="pdf-icon">PDF</div><a href="${SUPABASE_URL}/storage/v1/object/public/medical-files/${f.storage_path}" target="_blank" style="flex:1;color:#185FA5;text-decoration:none;font-size:13px">${f.file_name}</a><button class="btn btn-sm btn-danger" onclick="delFile('${f.id}','${f.storage_path}','${id}');this.closest('.pdf-item').remove()">✕</button></div>`).join(''):'';
   show('addScreen');
 }
 function handleFileSelect(e){pendingFiles=[...pendingFiles,...Array.from(e.target.files)];renderPendingFiles()}
@@ -780,75 +811,153 @@ function populateOwnerSelect(){
 async function saveExam(){
   const name=document.getElementById('examName').value.trim();
   if(!name){document.getElementById('saveError').style.display='block';return}
-  document.getElementById('saveError').style.display='none';
-  document.getElementById('saveLoading').style.display='block';
-  document.getElementById('saveBtn').disabled=true;
+  document.getElementById('saveError').style.display='none';document.getElementById('saveLoading').style.display='block';document.getElementById('saveBtn').disabled=true;
   const payload={owner_id:document.getElementById('examOwner').value,name,category:document.getElementById('examCat').value,exam_date:document.getElementById('examDate').value||null,result:document.getElementById('examResult').value,notes:document.getElementById('examNotes').value.trim(),doctor:document.getElementById('examDoctor').value.trim()};
   let examId=editingExamId;
   if(editingExamId){
     await sb.from('exams').update(payload).eq('id',editingExamId);
+    await logAudit('UPDATE','exam',editingExamId,`Επεξεργασία: ${name}`);
   } else {
     const {data}=await sb.from('exams').insert(payload).select().single();
     examId=data.id;
+    await logAudit('CREATE','exam',examId,`Νέα εξέταση: ${name}`);
   }
   for(const file of pendingFiles){
     const path=`${examId}/${Date.now()}_${file.name}`;
     const {error}=await sb.storage.from('medical-files').upload(path,file);
-    if(!error)await sb.from('files').insert({exam_id:examId,file_name:file.name,storage_path:path});
+    if(!error){await sb.from('files').insert({exam_id:examId,file_name:file.name,storage_path:path});await logAudit('CREATE','file',examId,`Αρχείο: ${file.name}`);}
   }
-  document.getElementById('saveBtn').disabled=false;
-  editingExamId=null;pendingFiles=[];
-  showMain();
+  document.getElementById('saveBtn').disabled=false;editingExamId=null;pendingFiles=[];showMain();
 }
 async function delExam(id){
+  const {data:ex}=await sb.from('exams').select('name').eq('id',id).single();
   const {data:files}=await sb.from('files').select('storage_path').eq('exam_id',id);
   if(files&&files.length)await sb.storage.from('medical-files').remove(files.map(f=>f.storage_path));
   await sb.from('files').delete().eq('exam_id',id);
   await sb.from('exam_comments').delete().eq('exam_id',id);
   await sb.from('exams').delete().eq('id',id);
+  await logAudit('DELETE','exam',id,`Διαγραφή: ${ex?ex.name:id}`);
   renderExams();
 }
 
-// ── EXPORT PDF ────────────────────────────────────────────
+// EXPORT PDF
 async function exportPDF(){
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
+  const {jsPDF}=window.jspdf;const doc=new jsPDF();
   const exams=await fetchExams();
   if(!exams.length){alert('Δεν υπάρχουν εξετάσεις για εξαγωγή.');return}
-  doc.setFont('helvetica');
-  doc.setFontSize(16);doc.text('Gardelis Medical - Ιστορικό Εξετάσεων',14,18);
-  doc.setFontSize(10);doc.setTextColor(120);
-  doc.text('Εκτυπώθηκε: '+new Date().toLocaleDateString('el-GR'),14,26);
-  doc.setTextColor(0);
+  doc.setFont('helvetica');doc.setFontSize(16);doc.text('Gardelis Medical - Ιστορικό Εξετάσεων',14,18);
+  doc.setFontSize(10);doc.setTextColor(120);doc.text('Εκτυπώθηκε: '+new Date().toLocaleDateString('el-GR'),14,26);doc.setTextColor(0);
   let y=36;
   exams.forEach(e=>{
     const owner=allUsers.find(u=>u.id===e.owner_id);
     const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR'):'';
     if(y>265){doc.addPage();y=20}
-    doc.setFontSize(12);doc.setFont('helvetica','bold');
-    doc.text((e.name||'')+(dateStr?' - '+dateStr:''),14,y);y+=6;
+    doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text((e.name||'')+(dateStr?' - '+dateStr:''),14,y);y+=6;
     doc.setFont('helvetica','normal');doc.setFontSize(10);
     if(owner){doc.setTextColor(100);doc.text(owner.name,14,y);y+=5;doc.setTextColor(0)}
     if(e.category||e.result){doc.text((e.category||'')+' | '+(e.result||''),14,y);y+=5}
     if(e.doctor){doc.text('Γιατρός: '+e.doctor,14,y);y+=5}
-    if(e.notes){
-      const lines=doc.splitTextToSize('Σημειώσεις: '+e.notes,180);
-      lines.forEach(l=>{if(y>265){doc.addPage();y=20}doc.text(l,14,y);y+=5});
-    }
+    if(e.notes){const lines=doc.splitTextToSize('Σημειώσεις: '+e.notes,180);lines.forEach(l=>{if(y>265){doc.addPage();y=20}doc.text(l,14,y);y+=5})}
     doc.setDrawColor(220);doc.line(14,y,196,y);y+=6;
   });
   doc.save('gardelis-medical-'+new Date().toISOString().split('T')[0]+'.pdf');
+  await logAudit('EXPORT','exams',null,'Export PDF εξετάσεων');
 }
 
-function showMain(){editingExamId=null;pendingFiles=[];show('mainScreen');if(currentNav==='dash')loadDashboard();else renderExams()}
-
-// ── CHANGE PIN ────────────────────────────────────────────
-function showChangePin(){
-  ['oldPin','newPin','newPin2'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('pinChgErr').style.display='none';
-  document.getElementById('pinChgOk').style.display='none';
-  show('pinScreen');
+// AUDIT LOG
+async function loadAudit(){
+  document.getElementById('auditLoading').style.display='block';
+  document.getElementById('auditList').innerHTML='';
+  const {data}=await sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(200);
+  document.getElementById('auditLoading').style.display='none';
+  if(!data||!data.length){document.getElementById('auditList').innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">Δεν υπάρχουν εγγραφές ακόμα.</div>';return}
+  const actionLabel={CREATE:'Δημιουργία',UPDATE:'Επεξεργασία',DELETE:'Διαγραφή',LOGIN:'Σύνδεση',LOGOUT:'Αποσύνδεση',EXPORT:'Εξαγωγή',IMPORT:'Εισαγωγή'};
+  const actionColor={CREATE:'#3b6d11',UPDATE:'#185FA5',DELETE:'#a32d2d',LOGIN:'#0F6E56',LOGOUT:'#888',EXPORT:'#854F0B',IMPORT:'#3C3489'};
+  document.getElementById('auditList').innerHTML=data.map(r=>{
+    const user=allUsers.find(u=>u.id===r.user_id);
+    const dt=new Date(r.created_at).toLocaleString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const col=actionColor[r.action]||'#888';
+    return `<div class="audit-row">
+      <div class="audit-time">${dt}</div>
+      <div style="flex:1">
+        <span style="font-size:11px;font-weight:500;color:${col};background:${col}18;padding:1px 7px;border-radius:4px;margin-right:6px">${actionLabel[r.action]||r.action}</span>
+        <span style="font-size:13px">${r.details||''}</span>
+        ${user?`<span style="font-size:11px;color:#aaa;margin-left:6px">— ${user.name}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
+async function clearAudit(){
+  await sb.from('audit_log').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  loadAudit();
+}
+
+// BACKUP
+async function exportBackup(){
+  const [
+    {data:users},{data:exams},{data:files},{data:comments},
+    {data:categories},{data:visibility}
+  ]=await Promise.all([
+    sb.from('users').select('*'),
+    sb.from('exams').select('*'),
+    sb.from('files').select('*'),
+    sb.from('exam_comments').select('*'),
+    sb.from('exam_categories').select('*'),
+    sb.from('user_visibility').select('*')
+  ]);
+  const backup={
+    version:1,
+    exported_at:new Date().toISOString(),
+    exported_by:currentUser.name,
+    data:{users,exams,files,comments,categories,visibility}
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='gardelis-medical-backup-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();URL.revokeObjectURL(url);
+  await logAudit('EXPORT','backup',null,'Εξαγωγή JSON backup');
+}
+
+async function importBackup(event){
+  const file=event.target.files[0];if(!file)return;
+  const status=document.getElementById('importStatus');
+  status.innerHTML='<div class="alert alert-info">Φόρτωση αρχείου...</div>';
+  try{
+    const text=await file.text();
+    const backup=JSON.parse(text);
+    if(!backup.data||!backup.version){status.innerHTML='<div class="alert alert-danger">Μη έγκυρο αρχείο backup.</div>';return}
+    status.innerHTML='<div class="alert alert-info">Εισαγωγή δεδομένων...</div>';
+    const {data:{exams,comments,categories}}=backup;
+    let imported=0;
+    if(categories&&categories.length){
+      for(const c of categories){
+        await sb.from('exam_categories').upsert({name:c.name},{onConflict:'name',ignoreDuplicates:true});
+      }
+    }
+    if(exams&&exams.length){
+      for(const e of exams){
+        const exists=await sb.from('exams').select('id').eq('id',e.id).single();
+        if(!exists.data){await sb.from('exams').insert(e);imported++;}
+      }
+    }
+    if(comments&&comments.length){
+      for(const c of comments){
+        const exists=await sb.from('exam_comments').select('id').eq('id',c.id).single();
+        if(!exists.data)await sb.from('exam_comments').insert(c);
+      }
+    }
+    await logAudit('IMPORT','backup',null,`Εισαγωγή backup: ${imported} νέες εξετάσεις`);
+    status.innerHTML=`<div class="alert alert-success">Εισαγωγή ολοκληρώθηκε! ${imported} νέες εξετάσεις εισήχθησαν.</div>`;
+    event.target.value='';
+  }catch(err){status.innerHTML=`<div class="alert alert-danger">Σφάλμα: ${err.message}</div>`;}
+}
+
+// MAIN
+function showMain(){editingExamId=null;pendingFiles=[];show('mainScreen');if(currentNav==='dash')loadDashboard();else if(currentNav==='cal')renderCalendar();else renderExams()}
+
+// CHANGE PIN
+function showChangePin(){['oldPin','newPin','newPin2'].forEach(id=>document.getElementById(id).value='');document.getElementById('pinChgErr').style.display='none';document.getElementById('pinChgOk').style.display='none';show('pinScreen')}
 async function doChangePin(){
   const old=document.getElementById('oldPin').value,n1=document.getElementById('newPin').value,n2=document.getElementById('newPin2').value;
   const err=document.getElementById('pinChgErr'),ok=document.getElementById('pinChgOk');
@@ -857,58 +966,39 @@ async function doChangePin(){
   if(n1.length<4){err.textContent='Τουλάχιστον 4 χαρακτήρες';err.style.display='block';return}
   if(n1!==n2){err.textContent='Οι κωδικοί δεν ταιριάζουν';err.style.display='block';return}
   await sb.from('users').update({pin:n1}).eq('id',currentUser.id);
+  await logAudit('UPDATE','user',currentUser.id,'Αλλαγή κωδικού');
   currentUser.pin=n1;allUsers=allUsers.map(u=>u.id===currentUser.id?{...u,pin:n1}:u);
   ok.style.display='block';setTimeout(showMain,1400);
 }
 
-// ── ADMIN ─────────────────────────────────────────────────
-async function showAdmin(){
-  await refreshUsers();
-  await refreshCategories();
-  renderAdminUsers();clearUserForm();populateVisViewer();renderCatList();
-  show('adminScreen');
-}
-async function refreshUsers(){
-  const {data}=await sb.from('users').select('*').order('created_at');
-  allUsers=data||[];
-}
-async function refreshCategories(){
-  const {data}=await sb.from('exam_categories').select('*').order('name');
-  allCategories=data||[];
-}
+// ADMIN
+async function showAdmin(){await refreshUsers();await refreshCategories();renderAdminUsers();clearUserForm();populateVisViewer();renderCatList();show('adminScreen')}
+async function refreshUsers(){const {data}=await sb.from('users').select('*').order('created_at');allUsers=data||[]}
+async function refreshCategories(){const {data}=await sb.from('exam_categories').select('*').order('name');allCategories=data||[]}
 function renderAdminUsers(){
-  const permLabel={rw:'Admin',rw_limited:'Editor',r:'Viewer'};
-  const permColor={rw:'#e6f1fb',rw_limited:'#E1F5EE',r:'#f0f0f0'};
-  const permText={rw:'#185FA5',rw_limited:'#0F6E56',r:'#666'};
+  const pl={rw:'Admin',rw_limited:'Editor',r:'Viewer'};
+  const pc={rw:'#e6f1fb',rw_limited:'#E1F5EE',r:'#f0f0f0'};
+  const pt={rw:'#185FA5',rw_limited:'#0F6E56',r:'#666'};
   document.getElementById('adminUserList').innerHTML=allUsers.map(u=>`
     <div class="card" style="display:flex;align-items:center;gap:10px;padding:10px 14px">
       <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${u.bg};color:${u.color}">${u.initials}</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:500">${u.name}</div>
-        <div style="font-size:12px;color:#888">@${u.username||'—'} · ${u.role}</div>
-      </div>
-      <span class="role-badge" style="background:${permColor[u.perm]||'#f0f0f0'};color:${permText[u.perm]||'#666'}">${permLabel[u.perm]||u.perm}</span>
+      <div style="flex:1"><div style="font-size:14px;font-weight:500">${u.name}</div><div style="font-size:12px;color:#888">@${u.username||'—'} · ${u.role}</div></div>
+      <span class="role-badge" style="background:${pc[u.perm]||'#f0f0f0'};color:${pt[u.perm]||'#666'}">${pl[u.perm]||u.perm}</span>
       <button class="btn btn-sm" onclick="loadUserEdit('${u.id}')">Επεξ.</button>
       ${u.id!==currentUser.id?`<button class="btn btn-sm btn-danger" onclick="if(confirm('Διαγραφή χρήστη;'))deleteUser('${u.id}')">Διαγ.</button>`:''}
     </div>`).join('');
 }
 function loadUserEdit(id){
   const u=allUsers.find(x=>x.id===id);if(!u)return;
-  document.getElementById('editUserId').value=u.id;
-  document.getElementById('editUserName').value=u.name;
-  document.getElementById('editUserUsername').value=u.username||'';
-  document.getElementById('editUserInitials').value=u.initials;
-  document.getElementById('editUserRole').value=u.role;
-  document.getElementById('editUserPerm').value=u.perm;
+  document.getElementById('editUserId').value=u.id;document.getElementById('editUserName').value=u.name;
+  document.getElementById('editUserUsername').value=u.username||'';document.getElementById('editUserInitials').value=u.initials;
+  document.getElementById('editUserRole').value=u.role;document.getElementById('editUserPerm').value=u.perm;
   document.getElementById('userFormTitle').textContent='Επεξεργασία χρήστη';
-  document.getElementById('adminErr').style.display='none';
-  document.getElementById('adminOk').style.display='none';
+  document.getElementById('adminErr').style.display='none';document.getElementById('adminOk').style.display='none';
 }
 function clearUserForm(){
   ['editUserId','editUserName','editUserUsername','editUserInitials','editUserRole'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('editUserPerm').value='r';
-  document.getElementById('adminErr').style.display='none';
-  document.getElementById('adminOk').style.display='none';
+  document.getElementById('editUserPerm').value='r';document.getElementById('adminErr').style.display='none';document.getElementById('adminOk').style.display='none';
   document.getElementById('userFormTitle').textContent='Προσθήκη χρήστη';
 }
 async function saveUser(){
@@ -925,21 +1015,25 @@ async function saveUser(){
   const uid=document.getElementById('editUserId').value;
   if(uid){
     await sb.from('users').update({name,username,initials,role,perm}).eq('id',uid);
+    await logAudit('UPDATE','user',uid,`Επεξεργασία χρήστη: ${name}`);
     if(uid===currentUser.id)currentUser={...currentUser,name,username,initials,role,perm};
   } else {
     const ci=allUsers.length%COLORS.length;
-    await sb.from('users').insert({name,username,initials,role,perm,pin:'1234',bg:COLORS[ci].bg,color:COLORS[ci].color});
+    const {data}=await sb.from('users').insert({name,username,initials,role,perm,pin:'1234',bg:COLORS[ci].bg,color:COLORS[ci].color}).select().single();
+    await logAudit('CREATE','user',data.id,`Νέος χρήστης: ${name}`);
   }
   await refreshUsers();renderAdminUsers();clearUserForm();populateVisViewer();
   ok.style.display='block';setTimeout(()=>ok.style.display='none',2000);
 }
 async function deleteUser(id){
+  const u=allUsers.find(x=>x.id===id);
   await sb.from('user_visibility').delete().or(`viewer_id.eq.${id},target_id.eq.${id}`);
   await sb.from('users').delete().eq('id',id);
+  await logAudit('DELETE','user',id,`Διαγραφή χρήστη: ${u?u.name:id}`);
   await refreshUsers();renderAdminUsers();populateVisViewer();
 }
 
-// ── VISIBILITY ────────────────────────────────────────────
+// VISIBILITY
 function populateVisViewer(){
   const sel=document.getElementById('visViewer');
   sel.innerHTML=allUsers.map(u=>`<option value="${u.id}">${u.name} (@${u.username||'—'})</option>`).join('');
@@ -951,13 +1045,7 @@ async function loadVisibility(){
   const checked=new Set((data||[]).map(r=>r.target_id));
   const targets=allUsers.filter(u=>u.id!==viewerId);
   document.getElementById('visTargetList').innerHTML=targets.length?
-    targets.map(u=>`<div class="vis-row">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="avatar" style="width:26px;height:26px;font-size:10px;background:${u.bg};color:${u.color}">${u.initials}</div>
-        <span>${u.name}</span>
-      </div>
-      <input type="checkbox" id="vis_${u.id}" value="${u.id}" ${checked.has(u.id)?'checked':''} style="width:18px;height:18px;cursor:pointer">
-    </div>`).join('')
+    targets.map(u=>`<div class="vis-row"><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:26px;height:26px;font-size:10px;background:${u.bg};color:${u.color}">${u.initials}</div><span>${u.name}</span></div><input type="checkbox" id="vis_${u.id}" value="${u.id}" ${checked.has(u.id)?'checked':''} style="width:18px;height:18px;cursor:pointer"></div>`).join('')
     :'<div style="color:#aaa;font-size:13px;padding:8px 0">Δεν υπάρχουν άλλοι χρήστες.</div>';
 }
 async function saveVisibility(){
@@ -965,16 +1053,15 @@ async function saveVisibility(){
   const selected=Array.from(document.querySelectorAll('#visTargetList input[type=checkbox]')).filter(c=>c.checked).map(c=>c.value);
   await sb.from('user_visibility').delete().eq('viewer_id',viewerId);
   if(selected.length)await sb.from('user_visibility').insert(selected.map(tid=>({viewer_id:viewerId,target_id:tid})));
-  document.getElementById('visOk').style.display='block';
-  setTimeout(()=>document.getElementById('visOk').style.display='none',2000);
+  await logAudit('UPDATE','visibility',viewerId,'Ενημέρωση ορατότητας χρήστη');
+  document.getElementById('visOk').style.display='block';setTimeout(()=>document.getElementById('visOk').style.display='none',2000);
 }
 
-// ── CATEGORIES ────────────────────────────────────────────
+// CATEGORIES
 function renderCatList(){
   const fixed=['Αιματολογικές','Απεικονιστικές','Καρδιολογικές','Άλλο'];
   document.getElementById('catList').innerHTML=allCategories.map(c=>`
-    <div class="cat-item">
-      <span>${c.name}</span>
+    <div class="cat-item"><span>${c.name}</span>
       ${!fixed.includes(c.name)?`<button class="btn btn-sm btn-danger" onclick="deleteCategory('${c.id}','${c.name}')">Διαγραφή</button>`:'<span style="font-size:11px;color:#aaa">Προεπιλογή</span>'}
     </div>`).join('');
 }
@@ -985,14 +1072,15 @@ async function addCategory(){
   if(!name){err.textContent='Εισάγετε όνομα κατηγορίας.';err.style.display='block';return}
   if(allCategories.find(c=>c.name.toLowerCase()===name.toLowerCase())){err.textContent='Η κατηγορία υπάρχει ήδη.';err.style.display='block';return}
   await sb.from('exam_categories').insert({name});
+  await logAudit('CREATE','category',null,`Νέα κατηγορία: ${name}`);
   document.getElementById('newCatName').value='';
-  await refreshCategories();
-  renderCatList();populateCatFilter();
+  await refreshCategories();renderCatList();populateCatFilter();
   ok.style.display='block';setTimeout(()=>ok.style.display='none',2000);
 }
 async function deleteCategory(id,name){
   if(!confirm(`Διαγραφή κατηγορίας "${name}";`))return;
   await sb.from('exam_categories').delete().eq('id',id);
+  await logAudit('DELETE','category',id,`Διαγραφή κατηγορίας: ${name}`);
   await refreshCategories();renderCatList();populateCatFilter();
 }
 
