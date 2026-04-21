@@ -85,6 +85,19 @@ h3{font-size:15px;font-weight:500}
 .exam-table tr:last-child td{border-bottom:none}
 .exam-table tr:hover td{background:#fafafa}
 .table-wrapper{overflow-x:auto;margin-bottom:10px;border-radius:10px}
+.table-wrapper table{min-width:100%;width:max-content}
+@media(min-width:900px){.table-wrapper table{width:100%;min-width:unset}}
+.date-picker-wrap{position:relative;flex:1;min-width:130px}
+.date-picker-wrap label{font-size:12px;color:#888;margin-bottom:2px;display:block}
+.date-display{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;min-height:36px}
+.date-display:hover{border-color:#185FA5}
+.date-display.has-value{color:#1a1a1a;font-weight:500}
+.date-display.empty{color:#aaa}
+.date-display .clr-btn{margin-left:auto;color:#aaa;font-size:12px;cursor:pointer;padding:0 2px}
+.date-display .clr-btn:hover{color:#a32d2d}
+input.hidden-date{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0}
+.pin-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center}
+.pin-modal{background:#fff;border-radius:14px;padding:1.5rem;width:320px;max-width:90vw}
 .cat-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px}
 .cat-item:last-child{border-bottom:none}
 .sort-ind{font-size:10px;margin-left:4px}
@@ -209,10 +222,26 @@ h3{font-size:15px;font-weight:500}
           <option>Κανονικό</option><option>Παθολογικό</option><option>Εκκρεμεί</option>
         </select>
       </div>
-      <div class="date-row">
-        <div><label>Από</label><input type="date" id="filterDateFrom" onchange="renderExams()"></div>
-        <div><label>Έως</label><input type="date" id="filterDateTo" onchange="renderExams()"></div>
-        <div style="display:flex;align-items:flex-end"><button class="btn btn-sm" onclick="clearDateFilters()">✕</button></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:flex-end">
+        <div class="date-picker-wrap">
+          <label>Από ημερομηνία</label>
+          <div class="date-display empty" id="dispFilterDateFrom" onclick="openDatePicker('filterDateFrom')">
+            <span class="cal-ico">📅</span>
+            <span id="lblFilterDateFrom">Επιλέξτε...</span>
+            <span class="clr-btn" id="clrFilterDateFrom" style="display:none" onclick="clearDate('filterDateFrom','renderExams');event.stopPropagation()">✕</span>
+          </div>
+          <input type="date" id="filterDateFrom" class="hidden-date" onchange="onDateChange('filterDateFrom','renderExams')">
+        </div>
+        <div class="date-picker-wrap">
+          <label>Έως ημερομηνία</label>
+          <div class="date-display empty" id="dispFilterDateTo" onclick="openDatePicker('filterDateTo')">
+            <span class="cal-ico">📅</span>
+            <span id="lblFilterDateTo">Επιλέξτε...</span>
+            <span class="clr-btn" id="clrFilterDateTo" style="display:none" onclick="clearDate('filterDateTo','renderExams');event.stopPropagation()">✕</span>
+          </div>
+          <input type="date" id="filterDateTo" class="hidden-date" onchange="onDateChange('filterDateTo','renderExams')">
+        </div>
+        <button class="btn btn-sm" onclick="clearDateFilters()" style="align-self:flex-end">✕ Καθαρισμός</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
         <select id="sortBy" style="flex:1;font-size:13px;padding:6px 10px" onchange="renderExams()">
@@ -244,7 +273,7 @@ h3{font-size:15px;font-weight:500}
     <div id="auditView" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <h2>Ιστορικό αλλαγών</h2>
-        <button class="btn btn-sm btn-danger" onclick="if(confirm('Εκκαθάριση ιστορικού;'))clearAudit()">Εκκαθάριση</button>
+        <button class="btn btn-sm btn-danger" onclick="askPinThenRun('clearAudit','Εκκαθάριση ιστορικού')">Εκκαθάριση</button>
       </div>
       <!-- Filters -->
       <div class="card" style="padding:12px 14px;margin-bottom:10px">
@@ -268,15 +297,25 @@ h3{font-size:15px;font-weight:500}
           </select>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <div style="flex:1;min-width:130px">
-            <label style="font-size:12px;color:#888;margin-bottom:2px">Από ημερομηνία</label>
-            <input type="date" id="auditDateFrom" style="font-size:13px;padding:6px 10px" onchange="loadAudit()">
+          <div class="date-picker-wrap">
+            <label>Από ημερομηνία</label>
+            <div class="date-display empty" id="dispAuditDateFrom" onclick="openDatePicker('auditDateFrom')">
+              <span class="cal-ico">📅</span>
+              <span id="lblAuditDateFrom">Επιλέξτε...</span>
+              <span class="clr-btn" id="clrAuditDateFrom" style="display:none" onclick="clearDate('auditDateFrom','loadAudit');event.stopPropagation()">✕</span>
+            </div>
+            <input type="date" id="auditDateFrom" class="hidden-date" onchange="onDateChange('auditDateFrom','loadAudit')">
           </div>
-          <div style="flex:1;min-width:130px">
-            <label style="font-size:12px;color:#888;margin-bottom:2px">Έως ημερομηνία</label>
-            <input type="date" id="auditDateTo" style="font-size:13px;padding:6px 10px" onchange="loadAudit()">
+          <div class="date-picker-wrap">
+            <label>Έως ημερομηνία</label>
+            <div class="date-display empty" id="dispAuditDateTo" onclick="openDatePicker('auditDateTo')">
+              <span class="cal-ico">📅</span>
+              <span id="lblAuditDateTo">Επιλέξτε...</span>
+              <span class="clr-btn" id="clrAuditDateTo" style="display:none" onclick="clearDate('auditDateTo','loadAudit');event.stopPropagation()">✕</span>
+            </div>
+            <input type="date" id="auditDateTo" class="hidden-date" onchange="onDateChange('auditDateTo','loadAudit')">
           </div>
-          <button class="btn btn-sm" onclick="clearAuditFilters()">✕ Καθαρισμός</button>
+          <button class="btn btn-sm" onclick="clearAuditFilters()" style="align-self:flex-end">✕ Καθαρισμός</button>
         </div>
         <div style="font-size:12px;color:#888;margin-top:8px" id="auditCount"></div>
       </div>
@@ -295,7 +334,7 @@ h3{font-size:15px;font-weight:500}
       <div class="card" style="margin-top:0">
         <h3 style="margin-bottom:8px">Επαναφορά δεδομένων</h3>
         <div class="alert alert-warning" style="margin-bottom:12px">Προσοχή: Η επαναφορά θα προσθέσει τα δεδομένα του αρχείου. Δεν διαγράφει τα υπάρχοντα.</div>
-        <div class="upload-area" onclick="document.getElementById('backupInput').click()">Επιλέξτε αρχείο JSON backup...</div>
+        <div class="upload-area" onclick="askPinThenRun('triggerImport','Επαναφορά δεδομένων')">Επιλέξτε αρχείο JSON backup...</div>
         <input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(event)">
         <div id="importStatus" style="margin-top:10px"></div>
       </div>
@@ -589,7 +628,7 @@ function switchTab(t){
   allUsers.forEach(u=>{const el=document.getElementById('tab_'+u.id);if(el)el.classList.toggle('active',t===u.id)});
   renderExams();
 }
-function clearDateFilters(){document.getElementById('filterDateFrom').value='';document.getElementById('filterDateTo').value='';renderExams()}
+function clearDateFilters(){clearDate('filterDateFrom','renderExams');clearDate('filterDateTo','renderExams')}
 function populateCatFilter(){
   const sel=document.getElementById('filterCat'),val=sel.value;
   sel.innerHTML='<option value="">Όλες κατηγορίες</option>'+allCategories.map(c=>`<option value="${c.name}" ${c.name===val?'selected':''}>${c.name}</option>`).join('');
@@ -909,10 +948,9 @@ function populateAuditUserFilter(){
 function clearAuditFilters(){
   document.getElementById('auditFilterUser').value='';
   document.getElementById('auditFilterAction').value='';
-  document.getElementById('auditDateFrom').value='';
-  document.getElementById('auditDateTo').value='';
   document.getElementById('auditSort').value='desc';
-  loadAudit();
+  clearDate('auditDateFrom','loadAudit');
+  clearDate('auditDateTo','loadAudit');
 }
 
 async function loadAudit(){
@@ -1159,7 +1197,94 @@ async function deleteCategory(id,name){
   await refreshCategories();renderCatList();populateCatFilter();
 }
 
+
+// ── DATE PICKER HELPERS ───────────────────────────────────
+const MONTHS_SHORT=['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+
+function openDatePicker(id){
+  const el=document.getElementById(id);
+  if(el.showPicker)el.showPicker();
+  else el.click();
+}
+
+function onDateChange(id, callback){
+  const val=document.getElementById(id).value;
+  const disp=document.getElementById('disp'+id.charAt(0).toUpperCase()+id.slice(1));
+  const lbl=document.getElementById('lbl'+id.charAt(0).toUpperCase()+id.slice(1));
+  const clr=document.getElementById('clr'+id.charAt(0).toUpperCase()+id.slice(1));
+  if(val){
+    const d=new Date(val+'T00:00:00');
+    const str=String(d.getDate()).padStart(2,'0')+'-'+MONTHS_SHORT[d.getMonth()]+'-'+d.getFullYear();
+    lbl.textContent=str;
+    disp.classList.remove('empty');disp.classList.add('has-value');
+    if(clr)clr.style.display='inline';
+  } else {
+    lbl.textContent='Επιλέξτε...';
+    disp.classList.add('empty');disp.classList.remove('has-value');
+    if(clr)clr.style.display='none';
+  }
+  window[callback]&&window[callback]();
+}
+
+function clearDate(id, callback){
+  document.getElementById(id).value='';
+  onDateChange(id, callback);
+}
+
+// ── PIN MODAL ─────────────────────────────────────────────
+let _pinCallback=null;
+
+function askPinThenRun(callbackName, title='Επιβεβαίωση'){
+  _pinCallback=callbackName;
+  document.getElementById('pinModalTitle').textContent=title;
+  document.getElementById('pinModalInput').value='';
+  document.getElementById('pinModalErr').style.display='none';
+  document.getElementById('pinModalOverlay').style.display='flex';
+  setTimeout(()=>document.getElementById('pinModalInput').focus(),100);
+}
+
+function closePinModal(){
+  document.getElementById('pinModalOverlay').style.display='none';
+  _pinCallback=null;
+}
+
+function confirmPinModal(){
+  const entered=document.getElementById('pinModalInput').value;
+  const admin=allUsers.find(u=>u.perm==='rw');
+  if(!admin||entered!==admin.pin){
+    document.getElementById('pinModalErr').style.display='block';
+    document.getElementById('pinModalInput').value='';
+    document.getElementById('pinModalInput').focus();
+    return;
+  }
+  closePinModal();
+  if(_pinCallback==='triggerImport'){
+    document.getElementById('backupInput').click();
+  } else if(window[_pinCallback]){
+    window[_pinCallback]();
+  }
+}
+
+function triggerImport(){
+  document.getElementById('backupInput').click();
+}
+
 init();
 </script>
+
+<!-- PIN CONFIRM MODAL -->
+<div id="pinModalOverlay" class="pin-modal-overlay" style="display:none">
+  <div class="pin-modal">
+    <div style="font-size:16px;font-weight:500;margin-bottom:6px" id="pinModalTitle">Επιβεβαίωση</div>
+    <div style="font-size:13px;color:#666;margin-bottom:14px">Εισάγετε τον κωδικό Admin για να συνεχίσετε.</div>
+    <div class="field"><input type="password" id="pinModalInput" placeholder="Κωδικός Admin..." onkeydown="if(event.key==='Enter')confirmPinModal()"></div>
+    <div id="pinModalErr" class="alert alert-danger" style="display:none;margin-bottom:8px">Λάθος κωδικός.</div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn" style="flex:1" onclick="closePinModal()">Ακύρωση</button>
+      <button class="btn btn-primary" style="flex:1" onclick="confirmPinModal()">Επιβεβαίωση</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
