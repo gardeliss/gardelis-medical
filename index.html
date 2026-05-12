@@ -509,14 +509,22 @@ async function logAudit(action,entity,entityId,details){
 // INIT
 async function init(){
   show('loadingScreen');
-  const [{data:users},{data:cats}]=await Promise.all([
-    sb.from('users').select('*').order('created_at'),
-    sb.from('exam_categories').select('*').order('name')
-  ]);
-  allUsers=users||[];allCategories=cats||[];
-  const session=loadSession();
-  if(session){const u=allUsers.find(u=>u.id===session.userId);if(u){currentUser=u;await loadVisibleUsers();setupMain();show('mainScreen');resetTimeout();return}}
-  show('loginScreen');
+  try{
+    const [{data:users,error:e1},{data:cats,error:e2}]=await Promise.all([
+      sb.from('users').select('*').order('created_at'),
+      sb.from('exam_categories').select('*').order('name')
+    ]);
+    if(e1||e2){
+      document.getElementById('loadingScreen').innerHTML=`<div class="container" style="padding-top:3rem;text-align:center"><div class="alert alert-danger" style="text-align:left"><strong>Σφάλμα σύνδεσης:</strong><br>${(e1||e2).message}</div></div>`;
+      return;
+    }
+    allUsers=users||[];allCategories=cats||[];
+    const session=loadSession();
+    if(session){const u=allUsers.find(u=>u.id===session.userId);if(u){currentUser=u;await loadVisibleUsers();setupMain();show('mainScreen');resetTimeout();return}}
+    show('loginScreen');
+  } catch(err){
+    document.getElementById('loadingScreen').innerHTML=`<div class="container" style="padding-top:3rem;text-align:center"><div class="alert alert-danger" style="text-align:left"><strong>Σφάλμα:</strong><br>${err.message}</div></div>`;
+  }
 }
 
 // LOGIN
