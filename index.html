@@ -509,14 +509,22 @@ async function logAudit(action,entity,entityId,details){
 // INIT
 async function init(){
   show('loadingScreen');
-  const [{data:users},{data:cats}]=await Promise.all([
-    sb.from('users').select('*').order('created_at'),
-    sb.from('exam_categories').select('*').order('name')
-  ]);
-  allUsers=users||[];allCategories=cats||[];
-  const session=loadSession();
-  if(session){const u=allUsers.find(u=>u.id===session.userId);if(u){currentUser=u;await loadVisibleUsers();setupMain();show('mainScreen');resetTimeout();return}}
-  show('loginScreen');
+  try{
+    const [{data:users,error:e1},{data:cats,error:e2}]=await Promise.all([
+      sb.from('users').select('*').order('created_at'),
+      sb.from('exam_categories').select('*').order('name')
+    ]);
+    if(e1||e2){
+      document.getElementById('loadingScreen').innerHTML=`<div class="container" style="padding-top:3rem;text-align:center"><div class="alert alert-danger" style="text-align:left"><strong>Σφάλμα σύνδεσης:</strong><br>${(e1||e2).message}</div></div>`;
+      return;
+    }
+    allUsers=users||[];allCategories=cats||[];
+    const session=loadSession();
+    if(session){const u=allUsers.find(u=>u.id===session.userId);if(u){currentUser=u;await loadVisibleUsers();setupMain();show('mainScreen');resetTimeout();return}}
+    show('loginScreen');
+  } catch(err){
+    document.getElementById('loadingScreen').innerHTML=`<div class="container" style="padding-top:3rem;text-align:center"><div class="alert alert-danger" style="text-align:left"><strong>Σφάλμα:</strong><br>${err.message}</div></div>`;
+  }
 }
 
 // LOGIN
@@ -913,28 +921,71 @@ async function delExam(id){
   renderExams();
 }
 
-// EXPORT PDF
+// EXPORT PDF (browser print - full Greek support)
 async function exportPDF(){
-  const {jsPDF}=window.jspdf;const doc=new jsPDF();
   const exams=await fetchExams();
   if(!exams.length){alert('Δεν υπάρχουν εξετάσεις για εξαγωγή.');return}
-  doc.setFont('helvetica');doc.setFontSize(16);doc.text('Gardelis Medical - Ιστορικό Εξετάσεων',14,18);
-  doc.setFontSize(10);doc.setTextColor(120);doc.text('Εκτυπώθηκε: '+new Date().toLocaleDateString('el-GR'),14,26);doc.setTextColor(0);
-  let y=36;
-  exams.forEach(e=>{
+
+  const rsColor={'Κανονικό':'#3b6d11','Παθολογικό':'#a32d2d','Εκκρεμεί':'#854F0B'};
+  const rsBg={'Κανονικό':'#EAF3DE','Παθολογικό':'#FCEBEB','Εκκρεμεί':'#FAEEDA'};
+  const catColor={'Αιματολογικές':'#185FA5','Απεικονιστικές':'#3C3489','Καρδιολογικές':'#993C1D','Άλλο':'#555'};
+  const catBg={'Αιματολογικές':'#E6F1FB','Απεικονιστικές':'#EEEDFE','Καρδιολογικές':'#FAECE7','Άλλο':'#f0f0f0'};
+
+  const rows=exams.map(e=>{
     const owner=allUsers.find(u=>u.id===e.owner_id);
-    const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR'):'';
-    if(y>265){doc.addPage();y=20}
-    doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text((e.name||'')+(dateStr?' - '+dateStr:''),14,y);y+=6;
-    doc.setFont('helvetica','normal');doc.setFontSize(10);
-    if(owner){doc.setTextColor(100);doc.text(owner.name,14,y);y+=5;doc.setTextColor(0)}
-    if(e.category||e.result){doc.text((e.category||'')+' | '+(e.result||''),14,y);y+=5}
-    if(e.doctor){doc.text('Γιατρός: '+e.doctor,14,y);y+=5}
-    if(e.notes){const lines=doc.splitTextToSize('Σημειώσεις: '+e.notes,180);lines.forEach(l=>{if(y>265){doc.addPage();y=20}doc.text(l,14,y);y+=5})}
-    doc.setDrawColor(220);doc.line(14,y,196,y);y+=6;
-  });
-  doc.save('gardelis-medical-'+new Date().toISOString().split('T')[0]+'.pdf');
-  await logAudit('EXPORT','exams',null,'Export PDF εξετάσεων');
+    const dateStr=e.exam_date?new Date(e.exam_date).toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    const rc=rsColor[e.result]||'#555'; const rb=rsBg[e.result]||'#eee';
+    const cc=catColor[e.category]||'#555'; const cb=catBg[e.category]||'#eee';
+    return `<tr>
+      <td>${owner?`<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:20px;height:20px;border-radius:50%;background:${owner.bg};color:${owner.color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600">${owner.initials}</span>${owner.name}</span>`:'—'}</td>
+      <td><strong>${e.name||'—'}</strong></td>
+      <td><span style="background:${cb};color:${cc};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500">${e.category||'—'}</span></td>
+      <td><span style="background:${rb};color:${rc};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500">${e.result||'—'}</span></td>
+      <td style="white-space:nowrap"><span style="background:#E6F1FB;color:#185FA5;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500">${dateStr}</span></td>
+      <td>${e.doctor||'—'}</td>
+      <td style="max-width:200px;font-size:11px;color:#555">${e.notes||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const activeUser=activeTab!=='all'?allUsers.find(u=>u.id===activeTab):null;
+  const filterInfo=[
+    activeUser?`Μέλος: ${activeUser.name}`:'',
+    document.getElementById('filterCat').value?`Κατηγορία: ${document.getElementById('filterCat').value}`:'',
+    document.getElementById('filterRes').value?`Αποτέλεσμα: ${document.getElementById('filterRes').value}`:'',
+    document.getElementById('filterDateFrom').value?`Από: ${document.getElementById('lblFilterDateFrom').textContent}`:'',
+    document.getElementById('filterDateTo').value?`Έως: ${document.getElementById('lblFilterDateTo').textContent}`:'',
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+  const html=`<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8">
+  <title>Gardelis Medical - Εξετάσεις</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a1a1a;padding:20px}
+    h1{font-size:18px;font-weight:600;color:#185FA5;margin-bottom:4px}
+    .meta{font-size:11px;color:#888;margin-bottom:4px}
+    .filters{font-size:11px;color:#555;background:#f5f5f5;padding:4px 10px;border-radius:4px;margin-bottom:14px;display:${filterInfo?'block':'none'}}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    th{background:#185FA5;color:#fff;padding:7px 8px;text-align:left;font-weight:500}
+    td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}
+    tr:nth-child(even) td{background:#fafafa}
+    .footer{margin-top:16px;font-size:10px;color:#aaa;text-align:right}
+    @media print{body{padding:10px}@page{margin:1cm}}
+  </style></head><body>
+  <h1>Gardelis Medical — Ιστορικό Εξετάσεων</h1>
+  <div class="meta">Εκτυπώθηκε: ${new Date().toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})} &nbsp;·&nbsp; ${exams.length} εξετάσεις</div>
+  ${filterInfo?`<div class="filters">Φίλτρα: ${filterInfo}</div>`:''}
+  <table>
+    <thead><tr><th>Μέλος</th><th>Εξέταση</th><th>Κατηγορία</th><th>Αποτέλεσμα</th><th>Ημερομηνία</th><th>Γιατρός</th><th>Σημειώσεις</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">Gardelis Medical © ${new Date().getFullYear()}</div>
+  <scr'+'ipt>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}</scr'+'ipt>
+  </body></html>`;
+
+  const w=window.open('','_blank','width=1000,height=700');
+  w.document.write(html);
+  w.document.close();
+  await logAudit('EXPORT','exams',null,\`Export PDF: \${exams.length} εξετάσεις\`);
 }
 
 // AUDIT LOG
