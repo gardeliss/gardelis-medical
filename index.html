@@ -991,7 +991,7 @@ async function exportPDF(){
   a.target='_blank';
   a.click();
   setTimeout(()=>URL.revokeObjectURL(url),5000);
-  await logAudit('EXPORT','exams',null,\`Export PDF: \${exams.length} εξετάσεις\`);
+  await logAudit('EXPORT','exams',null,'Export PDF: '+exams.length+' εξετάσεις');
 }
 
 // AUDIT LOG
