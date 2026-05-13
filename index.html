@@ -982,7 +982,9 @@ async function exportPDF(){
   <scr'+'ipt>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}</scr'+'ipt>
   </body></html>`;
 
-  const blob=new Blob(['\ufeff'+html],{type:'text/html;charset=utf-8'});
+  const encoder=new TextEncoder();
+    const encoded=encoder.encode(html);
+    const blob=new Blob([encoded],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
